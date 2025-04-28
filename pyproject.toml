@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "pbreflect-"
+version = "0.1.0"
+description = ""
+authors = ["Menshikov Valeriy Sergeevich <vmenshikov@ozon.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+jinja2 = "^3.1.6"
+grpcio-reflection = "^1.71.0"
+pydantic = "^2.11.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

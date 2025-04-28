@@ -1,0 +1,6 @@
+
+enum {{ name }} {
+{% for name, number in values %}
+    {{ name }} = {{ number }};
+{% endfor %}
+}

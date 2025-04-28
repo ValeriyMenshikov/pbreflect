@@ -1,0 +1,19 @@
+
+message {{ name }} {
+{% for field in fields %}
+    {{ field.label }} {{ field.type }} {{ field.name }} = {{ field.number }};
+{% endfor %}
+{% for oneof_name, fields in oneofs.items() %}
+    oneof {{ oneof_name }} {
+    {% for field in fields %}
+        {{ field.label }} {{ field.type }} {{ field.name }} = {{ field.number }};
+    {% endfor %}
+    }
+{% endfor %}
+{% for nested in nested_msgs %}
+{{ nested }}
+{% endfor %}
+{% for enum in enums %}
+{{ enum }}
+{% endfor %}
+}

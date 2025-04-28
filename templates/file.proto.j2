@@ -1,0 +1,8 @@
+syntax = "{{ syntax }}";
+
+{% if package %}package {{ package }};
+{% endif %}
+{% for prefix, imp in imports %}import{% for p in prefix %} {{ p }}{% endfor %} "{{ imp }}";
+{% endfor %}
+
+{{ content }}

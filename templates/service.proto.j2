@@ -1,0 +1,6 @@
+
+service {{ name }} {
+{% for method in methods %}
+    rpc {{ method.name }}({{ "stream " if method.client_streaming else "" }}{{ method.input_type }}) returns ({{ "stream " if method.server_streaming else "" }}{{ method.output_type }});
+{% endfor %}
+}
