@@ -5,22 +5,16 @@ import grpc
 from grpc_reflection.v1alpha import reflection_pb2, reflection_pb2_grpc
 from google.protobuf import descriptor_pb2
 
-from recover import ProtoRecover
 
-
-class GrpcServiceExtractor:
+class GrpcReflectionClient:
     def __init__(
         self,
         channel: grpc.Channel,
-        output_dir: pathlib.Path = None,
     ) -> None:
         self._channel = channel
         self._reflection_stub = reflection_pb2_grpc.ServerReflectionStub(self._channel)
         self.stub_names: set[str] = set()
         self.proto_file_descriptors: dict[str, descriptor_pb2.FileDescriptorProto] = {}
-        self.output_dir = output_dir or pathlib.Path.cwd()
-
-        self._extract()
 
     def _extract(self) -> None:
         services = self._get_stub_names()
@@ -54,15 +48,15 @@ class GrpcServiceExtractor:
     def _process_proto_response(
         self, file_proto_response: reflection_pb2.ServerReflectionResponse
     ) -> None:
-        for proto_bytes in file_proto_response.file_descriptor_response.file_descriptor_proto:
+        for (
+            proto_bytes
+        ) in file_proto_response.file_descriptor_response.file_descriptor_proto:
             file_descriptor_proto = descriptor_pb2.FileDescriptorProto()
             file_descriptor_proto.ParseFromString(proto_bytes)
-            self.proto_file_descriptors[file_descriptor_proto.name] = file_descriptor_proto
+            self.proto_file_descriptors[file_descriptor_proto.name] = (
+                file_descriptor_proto
+            )
 
-    def recover_protos(self) -> None:
-        for proto_descriptor in self.proto_file_descriptors.values():
-            print(f"[INFO] Recovering proto: {proto_descriptor.name}")
-            try:
-                ProtoRecover(proto_descriptor).get_proto(output_dir=self.output_dir)
-            except Exception as e:
-                print(f"[ERROR] Failed to recover {proto_descriptor.name}: {e}")
+    def get_descriptors(self) -> dict[str, descriptor_pb2.FileDescriptorProto]:
+        self._extract()
+        return self.proto_file_descriptors

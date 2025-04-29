@@ -1,26 +1,22 @@
-import re
 from pathlib import Path
-from collections import OrderedDict
-from itertools import groupby
 
 from jinja2 import Environment, FileSystemLoader
 import google.protobuf.descriptor_pb2 as descriptor_pb2
 
 
-class ProtoRecover:
-    def __init__(
-        self, descriptor: descriptor_pb2.FileDescriptorProto, templates_dir: Path = None
-    ):
-        self.descriptor = descriptor
+class ProtoFileBuilder:
+    def __init__(self):
+        self.descriptor: descriptor_pb2.FileDescriptorProto = None
         self.env = Environment(
-            loader=FileSystemLoader(
-                str(templates_dir or Path(__file__).parent / "templates")
-            ),
+            loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
             trim_blocks=True,
             lstrip_blocks=True,
         )
 
-    def get_proto(self, output_dir: Path = None):
+    def get_proto(
+        self, descriptor: descriptor_pb2.FileDescriptorProto
+    ):
+        self.descriptor = descriptor
         syntax = self.descriptor.syntax or "proto2"
         package = self.descriptor.package
         imports = []
@@ -40,21 +36,8 @@ class ProtoRecover:
         )
 
         name = self.descriptor.name.replace("..", "").strip(".\/")
-        proto = {"name": name, "content": rendered}
-        file_path = self._write_proto_file(proto, output_dir=output_dir)
 
-        return file_path
-
-    @staticmethod
-    def _write_proto_file(proto: dict, output_dir: Path = None):
-        parts = proto["name"].rsplit(".", 1)
-        directory = parts[0].replace(".", "/")
-        new_path = directory if len(parts) == 1 else f"{directory}.{parts[1]}"
-        proto_name = output_dir / new_path
-        proto_name.parent.mkdir(parents=True, exist_ok=True)
-        with open(proto_name, "w") as f:
-            f.write(proto["content"])
-        return proto_name
+        return name, rendered
 
     def _parse_msgs_and_services(self, desc, scopes, syntax):
         out = ""
@@ -96,8 +79,9 @@ class ProtoRecover:
     def _format_type(self, type_name: str) -> str:
         type_path = type_name.strip(".")
         if self.descriptor.package and type_path.startswith(self.descriptor.package):
-            return type_path[len(self.descriptor.package) + 1:]
+            return type_path[len(self.descriptor.package) + 1 :]
         return type_path
+
     def _render_message(self, message, scopes, syntax):
         fields = []
         oneofs = {}
@@ -107,7 +91,6 @@ class ProtoRecover:
         if message.options.map_entry:
             return ""
 
-        # Сначала собираем map_entry для определения map-полей
         map_entries = {
             nested.name: nested
             for nested in message.nested_type
@@ -119,20 +102,21 @@ class ProtoRecover:
                 field.type == descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE
                 and field.type_name.split(".")[-1] in map_entries
             ):
-                # Это map поле
                 entry = map_entries[field.type_name.split(".")[-1]]
                 key_field = next(f for f in entry.field if f.name == "key")
                 value_field = next(f for f in entry.field if f.name == "value")
 
                 field_info = {
-                    "label": "",  # У map нет label
+                    "label": "",
                     "type": f"map<{self._resolve_type(key_field)}, {self._resolve_type(value_field)}>",
                     "name": field.name,
                     "number": field.number,
                 }
             else:
                 field_info = {
-                    "label": "" if field.HasField("oneof_index") else self._labels[field.label],
+                    "label": ""
+                    if field.HasField("oneof_index")
+                    else self._labels[field.label],
                     "type": self._resolve_type(field),
                     "name": field.name,
                     "number": field.number,
@@ -165,11 +149,11 @@ class ProtoRecover:
     def _resolve_type(self, field):
         if field.type_name:
             type_path = field.type_name.strip(".")
-            if self.descriptor.package and type_path.startswith(self.descriptor.package):
-                # Наш локальный тип — можно укоротить
-                return type_path[len(self.descriptor.package) + 1:]
+            if self.descriptor.package and type_path.startswith(
+                self.descriptor.package
+            ):
+                return type_path[len(self.descriptor.package) + 1 :]
             else:
-                # Внешний тип — оставляем полностью
                 return type_path
         return self._types[field.type]
 
