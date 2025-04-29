@@ -1,0 +1,19 @@
+# Auto-generated client stub by pbreflect plugin
+from typing import Any
+
+class {{ service_name }}Client:
+    def __init__(self, channel):
+        self.channel = channel
+
+{% for method in methods %}
+    {% if async_mode %}
+    async def {{ method.snake_case_name }}(self, request: '{{ method.input_type }}') -> '{{ method.output_type }}':
+        # async client call to {{ method.original_name }}
+        pass
+    {% else %}
+    def {{ method.snake_case_name }}(self, request: '{{ method.input_type }}') -> '{{ method.output_type }}':
+        # sync client call to {{ method.original_name }}
+        pass
+    {% endif %}
+
+{% endfor %}
