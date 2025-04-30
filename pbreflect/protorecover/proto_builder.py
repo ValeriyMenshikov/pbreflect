@@ -1,25 +1,24 @@
 from pathlib import Path
+from typing import Optional, Any, Union
 
 from jinja2 import Environment, FileSystemLoader
 import google.protobuf.descriptor_pb2 as descriptor_pb2
 
 
 class ProtoFileBuilder:
-    def __init__(self):
-        self.descriptor: descriptor_pb2.FileDescriptorProto = None
+    def __init__(self) -> None:
+        self.descriptor: Optional[descriptor_pb2.FileDescriptorProto] = None
         self.env = Environment(
             loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
             trim_blocks=True,
             lstrip_blocks=True,
         )
 
-    def get_proto(
-        self, descriptor: descriptor_pb2.FileDescriptorProto
-    ):
+    def get_proto(self, descriptor: descriptor_pb2.FileDescriptorProto) -> tuple[str, str]:
         self.descriptor = descriptor
         syntax = self.descriptor.syntax or "proto2"
         package = self.descriptor.package
-        imports = []
+        imports: list[tuple[list[str], str]] = []
         for index, dep in enumerate(self.descriptor.dependency):
             prefix = []
             if index in self.descriptor.public_dependency:
@@ -39,7 +38,7 @@ class ProtoFileBuilder:
 
         return name, rendered
 
-    def _parse_msgs_and_services(self, desc, scopes, syntax):
+    def _parse_msgs_and_services(self, desc: descriptor_pb2.FileDescriptorProto, scopes: list[str], syntax: str) -> str:
         out = ""
 
         for service in getattr(desc, "service", []):
@@ -56,13 +55,13 @@ class ProtoFileBuilder:
 
         return out
 
-    def _render_enum(self, enum):
+    def _render_enum(self, enum: descriptor_pb2.EnumDescriptorProto) -> str:
         values = [(val.name, val.number) for val in enum.value]
         template = self.env.get_template("enum.proto.j2")
         return template.render(name=enum.name, options=[], values=values)
 
-    def _render_service(self, service):
-        methods = []
+    def _render_service(self, service: descriptor_pb2.ServiceDescriptorProto) -> str:
+        methods: list[dict[str, Any]] = []
         for method in service.method:
             methods.append(
                 {
@@ -78,15 +77,15 @@ class ProtoFileBuilder:
 
     def _format_type(self, type_name: str) -> str:
         type_path = type_name.strip(".")
-        if self.descriptor.package and type_path.startswith(self.descriptor.package):
+        if self.descriptor and self.descriptor.package and type_path.startswith(self.descriptor.package):
             return type_path[len(self.descriptor.package) + 1 :]
         return type_path
 
-    def _render_message(self, message, scopes, syntax):
-        fields = []
-        oneofs = {}
-        nested_msgs = []
-        enums = []
+    def _render_message(self, message: descriptor_pb2.DescriptorProto, scopes: list[str], syntax: str) -> str:
+        fields: list[dict[str, Any]] = []
+        oneofs: dict[str, list[dict[str, Any]]] = {}
+        nested_msgs: list[str] = []
+        enums: list[str] = []
 
         if message.options.map_entry:
             return ""
@@ -146,10 +145,10 @@ class ProtoFileBuilder:
             options=[],
         )
 
-    def _resolve_type(self, field):
+    def _resolve_type(self, field: descriptor_pb2.FieldDescriptorProto) -> str:
         if field.type_name:
             type_path = field.type_name.strip(".")
-            if self.descriptor.package and type_path.startswith(
+            if self.descriptor and self.descriptor.package and type_path.startswith(
                 self.descriptor.package
             ):
                 return type_path[len(self.descriptor.package) + 1 :]
@@ -158,14 +157,14 @@ class ProtoFileBuilder:
         return self._types[field.type]
 
     @property
-    def _types(self):
+    def _types(self) -> dict[int, str]:
         return {
             v: k.split("_")[1].lower()
             for k, v in descriptor_pb2.FieldDescriptorProto.Type.items()
         }
 
     @property
-    def _labels(self):
+    def _labels(self) -> dict[int, str]:
         return {
             v: k.split("_")[1].lower()
             for k, v in descriptor_pb2.FieldDescriptorProto.Label.items()

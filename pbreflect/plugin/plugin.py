@@ -24,7 +24,7 @@ def parse_parameters(param_string: str) -> dict:
     return options
 
 
-def main():
+def main() -> None:
     env = Environment(
         loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "templates")),
         trim_blocks=True,
