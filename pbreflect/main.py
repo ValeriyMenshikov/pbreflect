@@ -1,7 +1,8 @@
-import click
 import pathlib
-from typing import Optional
 
+import click
+
+from pbreflect.pbgen.runner import run
 from pbreflect.protorecover.recover_service import RecoverService
 
 
@@ -33,9 +34,9 @@ def get_protos(
     host: str,
     output: str,
     use_tls: bool,
-    root_cert: Optional[pathlib.Path],
-    private_key: Optional[pathlib.Path],
-    cert_chain: Optional[pathlib.Path],
+    root_cert: pathlib.Path | None,
+    private_key: pathlib.Path | None,
+    cert_chain: pathlib.Path | None,
 ) -> None:
     """Recover proto files from a gRPC server using reflection.
 
@@ -76,7 +77,43 @@ def get_protos(
             raise click.Abort()
 
 
+@click.command("generate")
+@click.option(
+    "-t",
+    "--gen_type",
+    "gen_type",
+    required=False,
+    help="Type of generator, also you can pass name of your custom compiler",
+    type=click.Choice(["default", "mypy", "betterproto"]),
+    default="default",
+)
+@click.option(
+    "-p", "--proto_dir", "proto_dir", required=True, help="Path to directory with proto files"
+)
+@click.option(
+    "-o",
+    "--output_dir",
+    "output_dir",
+    required=True,
+    help="Path to directory where to put generated Python code",
+)
+@click.option(
+    "-r", "--refresh", "refresh", required=False, is_flag=True, help="Clear output directory"
+)
+def gen(proto_dir: str, output_dir: str, gen_type: str = "default", refresh: bool = False):
+    """
+    Command to generate code
+
+    :param proto_dir: Directory with proto files
+    :param output_dir: Directory where to generate code
+    :param gen_type: Type of generator
+    :param refresh: Clear output directory
+    """
+    run(proto_dir, output_dir, gen_type, refresh)
+
+
 cli.add_command(get_protos)
+cli.add_command(gen)
 
 if __name__ == "__main__":
     cli()

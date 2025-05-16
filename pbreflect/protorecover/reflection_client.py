@@ -1,8 +1,8 @@
-from typing import Dict, List, Iterator, Optional, final
+from typing import final
 
 import grpc
-from grpc_reflection.v1alpha import reflection_pb2, reflection_pb2_grpc
 from google.protobuf import descriptor_pb2
+from grpc_reflection.v1alpha import reflection_pb2, reflection_pb2_grpc
 
 
 @final
@@ -20,9 +20,9 @@ class GrpcReflectionClient:
             channel: An established gRPC channel to the server
         """
         self._stub = reflection_pb2_grpc.ServerReflectionStub(channel)
-        self._descriptors: Dict[str, descriptor_pb2.FileDescriptorProto] = {}
+        self._descriptors: dict[str, descriptor_pb2.FileDescriptorProto] = {}
 
-    def get_proto_descriptors(self) -> Dict[str, descriptor_pb2.FileDescriptorProto]:
+    def get_proto_descriptors(self) -> dict[str, descriptor_pb2.FileDescriptorProto]:
         """Retrieve all proto descriptors from the server.
 
         Returns:
@@ -50,7 +50,7 @@ class GrpcReflectionClient:
                 f"Failed to load descriptors: {e.details() if hasattr(e, 'details') else str(e)}"
             ) from e
 
-    def _discover_services(self) -> List[str]:
+    def _discover_services(self) -> list[str]:
         """Discover all services exposed by the server.
 
         Returns:

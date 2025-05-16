@@ -1,8 +1,8 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, final, ClassVar
+from typing import Any, final
 
-from jinja2 import Environment, FileSystemLoader
 import google.protobuf.descriptor_pb2 as descriptor_pb2
+from jinja2 import Environment, FileSystemLoader
 
 
 @final
@@ -15,14 +15,14 @@ class ProtoFileBuilder:
 
     def __init__(self) -> None:
         """Initialize the ProtoFileBuilder."""
-        self.descriptor: Optional[descriptor_pb2.FileDescriptorProto] = None
+        self.descriptor: descriptor_pb2.FileDescriptorProto | None = None
         self.env = Environment(
             loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
             trim_blocks=True,
             lstrip_blocks=True,
         )
 
-    def get_proto(self, descriptor: descriptor_pb2.FileDescriptorProto) -> Tuple[str, str]:
+    def get_proto(self, descriptor: descriptor_pb2.FileDescriptorProto) -> tuple[str, str]:
         """Generate a .proto file from a FileDescriptorProto.
 
         Args:
@@ -34,7 +34,7 @@ class ProtoFileBuilder:
         self.descriptor = descriptor
         syntax = self.descriptor.syntax or "proto2"
         package = self.descriptor.package
-        imports: List[Tuple[List[str], str]] = []
+        imports: list[tuple[list[str], str]] = []
 
         # Process imports and their qualifiers (public/weak)
         for index, dep in enumerate(self.descriptor.dependency):
@@ -60,7 +60,7 @@ class ProtoFileBuilder:
         return name, rendered
 
     def _parse_msgs_and_services(
-        self, desc: descriptor_pb2.FileDescriptorProto, scopes: List[str], syntax: str
+        self, desc: descriptor_pb2.FileDescriptorProto, scopes: list[str], syntax: str
     ) -> str:
         """Parse messages, services, and enums from a FileDescriptorProto.
 
@@ -114,7 +114,7 @@ class ProtoFileBuilder:
         Returns:
             String containing the rendered service definition
         """
-        methods: List[Dict[str, Any]] = []
+        methods: list[dict[str, Any]] = []
         for method in service.method:
             methods.append(
                 {
@@ -147,7 +147,7 @@ class ProtoFileBuilder:
         return type_path
 
     def _render_message(
-        self, message: descriptor_pb2.DescriptorProto, scopes: List[str], syntax: str
+        self, message: descriptor_pb2.DescriptorProto, scopes: list[str], syntax: str
     ) -> str:
         """Render a message definition.
 
@@ -159,10 +159,10 @@ class ProtoFileBuilder:
         Returns:
             String containing the rendered message definition
         """
-        fields: List[Dict[str, Any]] = []
-        oneofs: Dict[str, List[Dict[str, Any]]] = {}
-        nested_msgs: List[str] = []
-        enums: List[str] = []
+        fields: list[dict[str, Any]] = []
+        oneofs: dict[str, list[dict[str, Any]]] = {}
+        nested_msgs: list[str] = []
+        enums: list[str] = []
 
         # Skip map entry messages as they're handled specially
         if message.options.map_entry:
@@ -250,14 +250,14 @@ class ProtoFileBuilder:
         return self._types[field.type]
 
     @property
-    def _types(self) -> Dict[int, str]:
+    def _types(self) -> dict[int, str]:
         """Map of field type enum values to their string representations."""
         return {
             v: k.split("_")[1].lower() for k, v in descriptor_pb2.FieldDescriptorProto.Type.items()
         }
 
     @property
-    def _labels(self) -> Dict[int, str]:
+    def _labels(self) -> dict[int, str]:
         """Map of field label enum values to their string representations."""
         return {
             v: k.split("_")[1].lower() for k, v in descriptor_pb2.FieldDescriptorProto.Label.items()

@@ -1,20 +1,15 @@
-from types import TracebackType
-from pathlib import Path
 import logging
 import socket
+from pathlib import Path
+from types import TracebackType
 from typing import (
-    Any,
-    Dict,
-    Optional,
-    Tuple,
-    Type,
-    final,
     ClassVar,
+    final,
 )
 
+import google.protobuf.descriptor_pb2 as descriptor_pb2
 import grpc
 from grpc import Channel, ChannelCredentials
-import google.protobuf.descriptor_pb2 as descriptor_pb2
 
 from pbreflect.protorecover.proto_builder import ProtoFileBuilder
 from pbreflect.protorecover.reflection_client import GrpcReflectionClient
@@ -42,11 +37,11 @@ class RecoverService:
     def __init__(
         self,
         target: str,
-        output_dir: Optional[Path] = None,
+        output_dir: Path | None = None,
         use_tls: bool = False,
-        root_certificates_path: Optional[Path] = None,
-        private_key_path: Optional[Path] = None,
-        certificate_chain_path: Optional[Path] = None,
+        root_certificates_path: Path | None = None,
+        private_key_path: Path | None = None,
+        certificate_chain_path: Path | None = None,
     ) -> None:
         """Initialize the proto recovery service.
 
@@ -97,9 +92,9 @@ class RecoverService:
         *,
         use_tls: bool = False,
         timeout: int = DEFAULT_TIMEOUT,
-        root_certificates_path: Optional[Path] = None,
-        private_key_path: Optional[Path] = None,
-        certificate_chain_path: Optional[Path] = None,
+        root_certificates_path: Path | None = None,
+        private_key_path: Path | None = None,
+        certificate_chain_path: Path | None = None,
     ) -> Channel:
         """Create a gRPC channel with safety checks.
 
@@ -135,7 +130,7 @@ class RecoverService:
             raise ConnectionError(f"Failed to establish channel to {target}: {e}") from e
 
     @staticmethod
-    def _parse_target(target: str) -> Tuple[str, str]:
+    def _parse_target(target: str) -> tuple[str, str]:
         """Parse target into host and port components.
 
         Args:
@@ -173,9 +168,9 @@ class RecoverService:
     def _create_secure_channel(
         target: str,
         timeout: int,
-        root_certificates_path: Optional[Path] = None,
-        private_key_path: Optional[Path] = None,
-        certificate_chain_path: Optional[Path] = None,
+        root_certificates_path: Path | None = None,
+        private_key_path: Path | None = None,
+        certificate_chain_path: Path | None = None,
     ) -> Channel:
         """Create and validate a secure gRPC channel.
 
@@ -257,7 +252,7 @@ class RecoverService:
         except Exception as e:
             raise ConnectionError(f"Insecure channel creation failed: {e}") from e
 
-    def recover_protos(self) -> Dict[str, Path]:
+    def recover_protos(self) -> dict[str, Path]:
         """Recover all proto files from the gRPC server.
 
         Returns:
@@ -267,7 +262,7 @@ class RecoverService:
             ProtoRecoveryError: If proto recovery fails
         """
         self._logger.info("Starting proto recovery process")
-        saved_files: Dict[str, Path] = {}
+        saved_files: dict[str, Path] = {}
 
         try:
             descriptors = self._reflection_client.get_proto_descriptors()
@@ -289,7 +284,7 @@ class RecoverService:
 
     def _process_proto_descriptor(
         self, descriptor: descriptor_pb2.FileDescriptorProto
-    ) -> Optional[Path]:
+    ) -> Path | None:
         """Process a single proto descriptor.
 
         Args:
@@ -331,7 +326,7 @@ class RecoverService:
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content)
             return file_path
-        except IOError as e:
+        except OSError as e:
             self._logger.error(f"Failed to write proto file {name}: {e}")
             raise
 
@@ -367,9 +362,9 @@ class RecoverService:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         """Ensure resources are cleaned up when exiting context."""
         self.close()

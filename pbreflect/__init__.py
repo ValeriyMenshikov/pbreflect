@@ -5,11 +5,11 @@ using the reflection API.
 """
 
 from pbreflect.protorecover import (
-    RecoverService,
-    ProtoFileBuilder,
-    GrpcReflectionClient,
     ConnectionError,
+    GrpcReflectionClient,
+    ProtoFileBuilder,
     ProtoRecoveryError,
+    RecoverService,
 )
 
 __version__ = "0.1.0"
