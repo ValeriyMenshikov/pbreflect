@@ -5,7 +5,10 @@ from pathlib import Path
 
 
 class ImportPatcher:
-    """Patcher for import statements in generated code."""
+    """Patcher for import statements in generated code.
+
+    This class implements the CodePatcher protocol.
+    """
 
     def __init__(self, code_dir: str, root_path: Path) -> None:
         """Initialize the import patcher.
@@ -17,15 +20,15 @@ class ImportPatcher:
         self.code_dir = Path(code_dir)
         self.root_path = root_path or Path.cwd()
 
-    def patch_imports(self) -> None:
-        """Fix import statements in generated code."""
-        self.patch_python_imports()
-
     def patch(self) -> None:
         """Apply all patches."""
-        self.patch_imports()
+        self._patch_imports()
 
-    def patch_python_imports(self) -> None:
+    def _patch_imports(self) -> None:
+        """Fix import statements in generated code."""
+        self._patch_python_imports()
+
+    def _patch_python_imports(self) -> None:
         """Patch imports in Python stub files."""
         output_files = [str(p) for p in self.code_dir.rglob("*.py")]
         expected_root_path = str(
@@ -49,9 +52,7 @@ class ImportPatcher:
         with open(file_path, encoding="UTF-8") as file:
             content = file.read()
         with open(file_path, "w", encoding="UTF-8") as file:
-            file.write(
-                content.replace(f"from {old_import} import", f"from {new_import} import")
-            )
+            file.write(content.replace(f"from {old_import} import", f"from {new_import} import"))
 
     @staticmethod
     def _get_imports(file_path: Path) -> list[str]:

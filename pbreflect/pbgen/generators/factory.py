@@ -20,12 +20,11 @@ class GeneratorFactoryImpl:
             "betterproto": BetterProtoGeneratorStrategy,
         }
 
-    def create_generator(self, gen_type: str, root_path: Path):
+    def create_generator(self, gen_type: str):
         """Create a generator strategy based on the specified type.
 
         Args:
             gen_type: Type of generator to create
-            root_path: Root project directory (kept for compatibility)
 
         Returns:
             Generator strategy
@@ -35,6 +34,6 @@ class GeneratorFactoryImpl:
         """
         if gen_type in self.strategies:
             return self.strategies[gen_type]()
-        
+
         # For custom generators, use dynamic strategy
         return DynamicGeneratorStrategy(gen_type)

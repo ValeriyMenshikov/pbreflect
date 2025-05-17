@@ -4,33 +4,34 @@ from pathlib import Path
 
 
 class MypyPatcher:
-    """Patcher for mypy interface files."""
+    """Patcher for mypy interface files.
 
-    def __init__(self, code_dir: str, root_path: Path) -> None:
+    This class implements the CodePatcher protocol.
+    """
+
+    def __init__(self, code_dir: str) -> None:
         """Initialize the mypy patcher.
 
         Args:
             code_dir: Directory with generated code
-            root_path: Root project directory
         """
         self.code_dir = Path(code_dir)
-        self.root_path = root_path or Path.cwd()
-
-    def patch_imports(self) -> None:
-        """Fix import statements in mypy interface files."""
-        self.patch_mypy_imports()
-
-    def patch_type_annotations(self) -> None:
-        """Fix type annotations in mypy interface files."""
-        # Currently handled as part of patch_mypy_imports
-        pass
 
     def patch(self) -> None:
         """Apply all patches."""
-        self.patch_imports()
-        self.patch_type_annotations()
+        self._patch_imports()
+        self._patch_type_annotations()
 
-    def patch_mypy_imports(self) -> None:
+    def _patch_imports(self) -> None:
+        """Fix import statements in mypy interface files."""
+        self._patch_mypy_imports()
+
+    def _patch_type_annotations(self) -> None:
+        """Fix type annotations in mypy interface files."""
+        # Currently handled as part of _patch_mypy_imports
+        pass
+
+    def _patch_mypy_imports(self) -> None:
         """Fix incorrect imports and class references in mypy interface files."""
         stubs = [str(p) for p in Path(self.code_dir).rglob("*.pyi")]
         # Get the output directory name from the path
@@ -80,9 +81,7 @@ class MypyPatcher:
                         if pb_path.exists():
                             # Add the output directory prefix to the import
                             new_imp = f"{output_dir_name}.{imp_str}"
-                            line = line.replace(
-                                f"from {imp_str} import", f"from {new_imp} import"
-                            )
+                            line = line.replace(f"from {imp_str} import", f"from {new_imp} import")
                             lines[i] = line
 
                 i += 1

@@ -7,6 +7,19 @@ from typing import Protocol
 from pbreflect.pbgen.errors import GenerationFailedError, NoProtoFilesError
 
 
+class GeneratorStrategy(Protocol):
+    """Protocol for generator strategies."""
+
+    @property
+    def command_template(self) -> str:
+        """Command template for this generator.
+
+        Returns:
+            Command template string
+        """
+        ...
+
+
 class BaseGenerator:
     """Base implementation of code generator."""
 
@@ -53,14 +66,13 @@ class BaseGenerator:
         stubs_path = Path(output_dir).joinpath(patched_proto_path)
         return stubs_path.exists()
 
-    def generate(self, proto_dir: str, output_dir: str, gen_type: str, root_path: Path) -> None:
+    def generate(self, proto_dir: str, output_dir: str, gen_type: str) -> None:
         """Generate stubs for all proto files in the include directory.
 
         Args:
             proto_dir: Directory with proto files
             output_dir: Directory where to generate stubs
             gen_type: Type of generator to use
-            root_path: Root project directory
 
         Raises:
             NoProtoFilesError: If no proto files are found
@@ -68,10 +80,10 @@ class BaseGenerator:
         """
         # Ensure output directory exists
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-        
+
         # Create generator strategy
-        strategy = self.generator_factory.create_generator(gen_type, root_path)
-        
+        strategy = self.generator_factory.create_generator(gen_type)
+
         # Find proto files
         protos = self.proto_finder.find_proto_files(proto_dir)
 

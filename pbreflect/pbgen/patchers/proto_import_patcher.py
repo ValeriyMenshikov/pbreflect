@@ -7,7 +7,10 @@ from pathlib import Path
 
 
 class ProtoImportPatcher:
-    """Patcher for import statements in proto files."""
+    """Patcher for import statements in proto files.
+
+    This class implements the CodePatcher protocol.
+    """
 
     def __init__(self, proto_dir: str) -> None:
         """Initialize the import patcher.
@@ -17,21 +20,21 @@ class ProtoImportPatcher:
         """
         self.proto_dir = Path(proto_dir)
 
-    def patch_imports(self) -> None:
-        """Patch import statements in proto files."""
-        self.patch_incorrect_local_imports()
-        self.remove_gitlab_path()
-
-    def patch_file_names(self) -> None:
-        """Patch file names that might cause issues."""
-        self.patch_keywords_in_file_names()
-        
     def patch(self) -> None:
         """Apply all patches."""
-        self.patch_imports()
-        self.patch_file_names()
+        self._patch_imports()
+        self._patch_file_names()
 
-    def patch_incorrect_local_imports(self) -> None:
+    def _patch_imports(self) -> None:
+        """Patch import statements in proto files."""
+        self._patch_incorrect_local_imports()
+        self._remove_gitlab_path()
+
+    def _patch_file_names(self) -> None:
+        """Patch file names that might cause issues."""
+        self._patch_keywords_in_file_names()
+
+    def _patch_incorrect_local_imports(self) -> None:
         """Patch local imports that are referenced from the root directory."""
         for proto_path in self.proto_dir.rglob("*.proto"):
             if not proto_path.is_file():
@@ -45,58 +48,48 @@ class ProtoImportPatcher:
                     while parent.absolute() != self.proto_dir.absolute():
                         for path in parent.rglob("*.proto"):
                             if imp in path.as_posix():
-                                new_import = path.relative_to(
-                                    self.proto_dir.absolute()
-                                ).as_posix()
+                                new_import = path.relative_to(self.proto_dir.absolute()).as_posix()
                                 self._replace_import(imp, new_import, proto_path)
-                        parent = parent.parent.absolute()
+                        parent = parent.parent
 
-    def patch_keywords_in_file_names(self) -> None:
-        """Patch proto files with Python keywords in their names."""
-        for proto_path in self.proto_dir.rglob("*.proto"):
-            if not proto_path.is_file():
-                continue
-
-            file_name = proto_path.stem
-            if file_name in kwlist:
-                new_file_name = f"{file_name}_.proto"
-                new_path = proto_path.parent.joinpath(new_file_name)
-                shutil.copy(proto_path, new_path)
-
-    def remove_gitlab_path(self) -> None:
-        """Remove GitLab-specific paths from import statements."""
+    def _remove_gitlab_path(self) -> None:
+        """Remove gitlab path from import statements."""
         for proto_path in self.proto_dir.rglob("*.proto"):
             if not proto_path.is_file():
                 continue
 
             imports = self._get_imports(proto_path)
             for imp in imports:
-                if "/" in imp and not imp.startswith("google/"):
-                    parts = imp.split("/")
-                    if len(parts) > 2 and parts[0].startswith("gitlab"):
-                        new_import = "/".join(parts[2:])
-                        self._replace_import(imp, new_import, proto_path)
+                if "gitlab" in imp:
+                    new_import = imp.split("/")[-1]
+                    self._replace_import(imp, new_import, proto_path)
+
+    def _patch_keywords_in_file_names(self) -> None:
+        """Patch file names that use Python keywords."""
+        for proto_path in self.proto_dir.rglob("*.proto"):
+            if not proto_path.is_file():
+                continue
+
+            filename = proto_path.stem
+            if filename in kwlist:
+                new_path = proto_path.with_stem(f"{filename}_pb")
+                shutil.copy(proto_path, new_path)
 
     @staticmethod
-    def _replace_import(old_import: str, new_import: str, proto_path: Path) -> None:
-        """Replace import statement in a proto file."""
-        import_pattern = 'import "{}";'
-        with open(proto_path, encoding="UTF-8") as proto:
-            content = proto.read()
-        with open(proto_path, "w", encoding="UTF-8") as proto:
-            proto.write(
-                content.replace(
-                    import_pattern.format(old_import), import_pattern.format(new_import)
-                )
-            )
+    def _replace_import(old_import: str, new_import: str, file_path: Path) -> None:
+        """Replace import statement in proto file."""
+        with open(file_path, encoding="UTF-8") as file:
+            content = file.read()
+        with open(file_path, "w", encoding="UTF-8") as file:
+            file.write(content.replace(f'import "{old_import}"', f'import "{new_import}"'))
 
     @staticmethod
-    def _get_imports(proto_path: Path) -> list[str]:
-        """Get all import statements from a proto file."""
+    def _get_imports(file_path: Path) -> list[str]:
+        """Get all import statements from proto file."""
         imports = []
-        with open(proto_path, encoding="UTF-8") as proto:
+        with open(file_path, encoding="UTF-8") as proto:
             for line in proto.readlines():
-                if line.strip().startswith('import "'):
-                    import_path = re.search(r'import "(.*?)";', line).group(1)
+                if line.strip().startswith("import "):
+                    import_path = re.search(r'"(.*?)"', line).group(1)
                     imports.append(import_path)
         return imports
