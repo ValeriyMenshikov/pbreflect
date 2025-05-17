@@ -1,10 +1,15 @@
-"""Generated client code for {{ package }} using pbreflect."""
+"""Generated client code for {{ package }} using pbreflect.
+
+This module contains auto-generated gRPC client classes for the {{ package }} package.
+It provides strongly-typed async gRPC clients that follow the "duck typing" principle.
+"""
 
 import grpc
 from typing import Dict, List, Optional, Union, Any, Callable, ClassVar, Type, cast, Iterator
 from google.protobuf.message import Message
 from abc import ABC
 
+{# Import all required modules, skipping duplicates #}
 {% for import_line in imports %}
 {% if import_line.startswith("import grpc") or import_line.startswith("from typing") or import_line.startswith("from google.protobuf.message") or import_line.startswith("from nuke.grpc_client") or import_line.startswith("from abc") %}
 {% else %}
@@ -15,7 +20,11 @@ from abc import ABC
 {% if services %}
 {% for service in services %}
 class _{{ service.name }}Stub:
-    """Internal stub class for {{ service.name }} service."""
+    """Internal stub class for {{ service.name }} service.
+    
+    This class provides direct access to the gRPC methods exposed by the service.
+    It should not be used directly, but through the {{ service.name }}Client class.
+    """
     
     def __init__(self, channel: Union[grpc.Channel, grpc.aio.Channel]) -> None:
         """Initialize the stub with a gRPC channel.
@@ -23,6 +32,7 @@ class _{{ service.name }}Stub:
         Args:
             channel: gRPC channel for communication
         """
+        {# Generate method stubs based on streaming type #}
         {% for method in service.methods %}
         {% if method.is_client_streaming and method.is_server_streaming %}
         self.{{ method.original_name }} = channel.stream_stream(
@@ -53,8 +63,11 @@ class _{{ service.name }}Stub:
 
 
 class {{ service.name }}Client:
-    """Client for {{ service.name }} service."""
+    """Client for the {{ service.name }} service.
     
+    This class provides a strongly-typed async interface to the gRPC service.
+    """
+
     def __init__(self, channel: Union[grpc.Channel, grpc.aio.Channel]) -> None:
         """Initialize the client with a gRPC channel.
         
@@ -63,6 +76,7 @@ class {{ service.name }}Client:
         """
         self._stub = _{{ service.name }}Stub(channel)
 
+    {# Generate client methods with proper type annotations #}
     {% for method in service.methods %}
     def {{ method.name }}(
         self,

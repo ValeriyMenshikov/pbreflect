@@ -53,7 +53,7 @@ class ProtoFileBuilder:
         rendered = template.render(syntax=syntax, package=package, imports=imports, content=content.strip())
 
         # Normalize the file name
-        name = self.descriptor.name.replace("..", "").strip(".\/")
+        name = self.descriptor.name.replace("..", "").strip("./\\")
 
         return name, rendered
 

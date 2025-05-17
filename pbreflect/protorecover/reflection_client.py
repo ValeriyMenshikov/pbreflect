@@ -1,7 +1,7 @@
+import re
 from typing import final
 
 import grpc
-import re
 from google.protobuf import descriptor_pb2
 from grpc_reflection.v1alpha import reflection_pb2, reflection_pb2_grpc
 
@@ -161,9 +161,9 @@ class GrpcReflectionClient:
         methods = []
         for method in service.method:
             # Сохраняем полный путь к типу (убираем начальную точку, если она есть)
-            full_input_type = method.input_type[1:] if method.input_type.startswith('.') else method.input_type
-            full_output_type = method.output_type[1:] if method.output_type.startswith('.') else method.output_type
-            
+            full_input_type = method.input_type[1:] if method.input_type.startswith(".") else method.input_type
+            full_output_type = method.output_type[1:] if method.output_type.startswith(".") else method.output_type
+
             # Преобразуем полный путь к типу в путь к модулю Python
             input_type = self._get_python_type_path(full_input_type)
             output_type = self._get_python_type_path(full_output_type)
@@ -184,31 +184,31 @@ class GrpcReflectionClient:
             )
 
         return methods
-        
+
     def _get_python_type_path(self, proto_type_path: str) -> str:
         """Преобразует полный путь к типу protobuf в путь к модулю Python.
-        
+
         Args:
             proto_type_path: Полный путь к типу в формате protobuf (например, 'google.protobuf.Empty')
-            
+
         Returns:
             Путь к типу в формате Python (например, 'empty_pb2.Empty')
         """
-        if not proto_type_path or '.' not in proto_type_path:
+        if not proto_type_path or "." not in proto_type_path:
             return proto_type_path
-            
+
         # Разделяем путь на компоненты (убираем начальную точку, если она есть)
-        path = proto_type_path[1:] if proto_type_path.startswith('.') else proto_type_path
-        components = path.split('.')
+        path = proto_type_path[1:] if proto_type_path.startswith(".") else proto_type_path
+        components = path.split(".")
         type_name = components[-1]  # Последний компонент - это имя типа
-        
+
         # Для стандартных типов Google Protobuf используем соответствующий модуль
-        if len(components) >= 3 and components[0] == 'google' and components[1] == 'protobuf':
+        if len(components) >= 3 and components[0] == "google" and components[1] == "protobuf":
             # Формируем имя модуля на основе последнего компонента (имени типа)
             # Например, для 'google.protobuf.Empty' -> 'empty_pb2.Empty'
-            module_name = self._camel_to_snake(type_name).lower() + '_pb2'
+            module_name = self._camel_to_snake(type_name).lower() + "_pb2"
             return f"{module_name}.{type_name}"
-        
+
         # Для других типов возвращаем короткое имя для обратной совместимости
         return type_name
 

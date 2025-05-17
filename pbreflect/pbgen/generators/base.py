@@ -9,7 +9,7 @@ from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 from pbreflect.pbgen.utils.command import CommandExecutorImpl
 from pbreflect.pbgen.utils.file_finder import ProtoFileFinderImpl
 
-# Используем TYPE_CHECKING для избежания циклического импорта
+# Using TYPE_CHECKING to avoid circular imports
 if TYPE_CHECKING:
     from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
 

@@ -17,5 +17,5 @@ class GeneratorStrategy(Protocol):
         ...
 
 
-# Определяем тип для стратегий генератора
+# Define type for generator strategies
 T_GeneratorStrategy = TypeVar("T_GeneratorStrategy", bound="GeneratorStrategy")

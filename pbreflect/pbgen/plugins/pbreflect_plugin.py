@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 """Entry point for the pbreflect protoc plugin."""
 
-import sys
-
 from pbreflect.pbgen.plugins.pbreflect import main as pbreflect_main
 
 
 def main() -> None:
     """Main entry point for the plugin."""
-    # Запускаем основной код плагина
+    # Run the main plugin code
     pbreflect_main()
 
 

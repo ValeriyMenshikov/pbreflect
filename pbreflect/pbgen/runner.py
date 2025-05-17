@@ -1,9 +1,14 @@
-"""Runner for code generation."""
+"""Runner for code generation.
+
+This module provides the main entry point for generating client code from proto files.
+It orchestrates the process of finding proto files, patching them if needed,
+generating code using the appropriate generator, and applying post-generation patches.
+"""
 
 import os
 import shutil
 from pathlib import Path
-from typing import Literal, List
+from typing import Literal
 
 from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
 from pbreflect.pbgen.patchers.directory_structure_patcher import DirectoryStructurePatcher
@@ -21,25 +26,33 @@ def run(
     refresh: bool = False,
     root_path: Path | None = None,
 ) -> None:
-    """Run code generation.
+    """Run code generation for proto files.
+
+    This function orchestrates the entire code generation process:
+    1. Optionally cleans the output directory
+    2. Applies pre-generation patches to proto files
+    3. Finds all proto files in the specified directory
+    4. Generates code using the selected generator type
+    5. Applies post-generation patches to the generated code
 
     Args:
-        proto_dir: Directory with proto files
-        output_dir: Directory where to generate code
-        gen_type: Type of generator
-        refresh: Whether to refresh the output directory
-        root_path: Root project directory
+        proto_dir: Directory containing proto files to process
+        output_dir: Directory where generated code will be placed
+        gen_type: Type of generator to use:
+            - "default": Standard protoc Python output
+            - "mypy": Standard output with mypy type annotations
+            - "betterproto": Uses betterproto generator
+            - "pbreflect": Custom generator with enhanced gRPC client support
+        refresh: If True, clears the output directory before generation
+        root_path: Root project directory, defaults to current working directory
     """
     if refresh and os.path.exists(output_dir):
         shutil.rmtree(output_dir)
 
-    # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
-    # Use current directory as root path if not specified
     root_path = root_path or Path.cwd()
 
-    # Patch proto files before generation
     proto_patchers = [
         ProtoImportPatcher(proto_dir),
     ]
@@ -47,15 +60,13 @@ def run(
     for patcher in proto_patchers:
         patcher.patch()
 
-    # Generate code
     proto_finder = ProtoFileFinderImpl(proto_dir)
+
     command_executor = CommandExecutorImpl()
     generator_factory = GeneratorFactoryImpl()
 
-    # Create generator based on type
     generator_strategy = generator_factory.create_generator(gen_type)
 
-    # Generate code
     from pbreflect.pbgen.generators.base import BaseGenerator
 
     generator = BaseGenerator(proto_finder, command_executor, generator_factory)

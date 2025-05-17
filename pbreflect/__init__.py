@@ -1,7 +1,7 @@
 """PBReflect - Protocol Buffer Recovery Tool.
 
 A tool for recovering Protocol Buffer (protobuf) definitions from gRPC services
-using the reflection API.
+using the reflection API and generating client code.
 """
 
 from pbreflect.protorecover import (
@@ -12,7 +12,7 @@ from pbreflect.protorecover import (
     RecoverService,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = [
     "RecoverService",
     "ProtoFileBuilder",

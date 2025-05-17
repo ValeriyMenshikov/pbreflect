@@ -12,7 +12,6 @@ class GeneratorFactoryImpl:
     """Implementation of generator factory."""
 
     def __init__(self) -> None:
-        """Initialize the generator factory."""
         self.strategies: dict[str, type[GeneratorStrategy]] = {
             "default": DefaultGeneratorStrategy,
             "mypy": MyPyGeneratorStrategy,
@@ -35,9 +34,6 @@ class GeneratorFactoryImpl:
         if gen_type in self.strategies:
             return self.strategies[gen_type]()
 
-        # For custom generators, use dynamic strategy
-        # Явно указываем тип для mypy
         dynamic_strategy = DynamicGeneratorStrategy(gen_type)
-        # Используем assert для проверки типа во время выполнения
         assert isinstance(dynamic_strategy, GeneratorStrategy)
         return dynamic_strategy

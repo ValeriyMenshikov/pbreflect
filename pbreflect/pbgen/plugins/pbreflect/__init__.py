@@ -1,6 +1,5 @@
 """PbReflect plugin for protoc."""
 
-import os
 import sys
 from pathlib import Path
 
@@ -16,17 +15,18 @@ class PbReflectPlugin:
 
     def __init__(self) -> None:
         """Initialize the plugin."""
-        # Создаем клиент для работы с дескрипторами
-        # Для плагина нам не нужен реальный канал, так как мы работаем с дескрипторами напрямую
+        # Create client for working with descriptors
+        # For the plugin, we don't need a real channel as we work with descriptors directly
         self.descriptor_client = GrpcReflectionClient(channel=None)
 
-    def get_template_path(self) -> Path:
+    @staticmethod
+    def get_template_path() -> Path:
         """Get path to templates directory.
 
         Returns:
             Path to templates directory
         """
-        # Определяем путь к директории с шаблонами
+        # Determine the path to the templates directory
         current_dir = Path(__file__).parent
         template_dir = current_dir / "templates"
         return template_dir
@@ -40,7 +40,7 @@ class PbReflectPlugin:
         Returns:
             Jinja2 template
         """
-        # Создаем окружение Jinja2
+        # Create Jinja2 environment
         template_path = self.get_template_path()
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_path),
@@ -84,7 +84,7 @@ class PbReflectPlugin:
         # Create response
         response = plugin.CodeGeneratorResponse()
 
-        # Указываем, что поддерживаем опциональные поля в proto3
+        # Indicate that we support optional fields in proto3
         response.supported_features = plugin.CodeGeneratorResponse.FEATURE_PROTO3_OPTIONAL
 
         # Process each file

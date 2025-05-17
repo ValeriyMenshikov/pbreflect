@@ -66,11 +66,11 @@ def get_protos(
         certificate_chain_path=cert_chain,
     ) as service:
         try:
-            saved_files = service.recover_protos()
+            saved_files = service.recover_proto_files()
             if saved_files:
                 click.echo(f"Successfully recovered {len(saved_files)} proto files to {output_dir}")
-                for proto_name, file_path in saved_files.items():
-                    click.echo(f"  - {proto_name}: {file_path}")
+                for file_path in saved_files:
+                    click.echo(f"  - {file_path.name}: {file_path}")
             else:
                 click.echo("No proto files were recovered")
         except Exception as e:
