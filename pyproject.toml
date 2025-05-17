@@ -18,8 +18,12 @@ classifiers = [
 ]
 packages = [{ include = "pbreflect" }]
 
-[tool.poetry.scripts]
+[project.entry-points.console_scripts]
 pbreflect = "pbreflect.main:cli"
+protoc-gen-pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
+
+[project.entry-points.protoc_gen_plugins]
+pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -33,7 +37,7 @@ grpcio = "^1.71.0"
 betterproto = "^1.2.5"
 grpc-stubs = "^1.53.0.6"
 protobuf = "^5.0.0"
-
+types-protobuf = "^4.24.0.20240311"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.7"

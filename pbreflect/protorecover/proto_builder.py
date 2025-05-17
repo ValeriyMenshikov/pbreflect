@@ -50,18 +50,14 @@ class ProtoFileBuilder:
 
         # Render the complete proto file using the template
         template = self.env.get_template("file.proto.j2")
-        rendered = template.render(
-            syntax=syntax, package=package, imports=imports, content=content.strip()
-        )
+        rendered = template.render(syntax=syntax, package=package, imports=imports, content=content.strip())
 
         # Normalize the file name
         name = self.descriptor.name.replace("..", "").strip(".\/")
 
         return name, rendered
 
-    def _parse_msgs_and_services(
-        self, desc: descriptor_pb2.FileDescriptorProto, scopes: list[str], syntax: str
-    ) -> str:
+    def _parse_msgs_and_services(self, desc: descriptor_pb2.FileDescriptorProto, scopes: list[str], syntax: str) -> str:
         """Parse messages, services, and enums from a FileDescriptorProto.
 
         Args:
@@ -138,17 +134,11 @@ class ProtoFileBuilder:
             Formatted type name
         """
         type_path = type_name.strip(".")
-        if (
-            self.descriptor
-            and self.descriptor.package
-            and type_path.startswith(self.descriptor.package)
-        ):
+        if self.descriptor and self.descriptor.package and type_path.startswith(self.descriptor.package):
             return type_path[len(self.descriptor.package) + 1 :]
         return type_path
 
-    def _render_message(
-        self, message: descriptor_pb2.DescriptorProto, scopes: list[str], syntax: str
-    ) -> str:
+    def _render_message(self, message: descriptor_pb2.DescriptorProto, scopes: list[str], syntax: str) -> str:
         """Render a message definition.
 
         Args:
@@ -169,9 +159,7 @@ class ProtoFileBuilder:
             return ""
 
         # Identify map entry messages for special handling
-        map_entries = {
-            nested.name: nested for nested in message.nested_type if nested.options.map_entry
-        }
+        map_entries = {nested.name: nested for nested in message.nested_type if nested.options.map_entry}
 
         # Process each field
         for field in message.field:
@@ -237,11 +225,7 @@ class ProtoFileBuilder:
         if field.type_name:
             # It's a named type (message or enum)
             type_path = field.type_name.strip(".")
-            if (
-                self.descriptor
-                and self.descriptor.package
-                and type_path.startswith(self.descriptor.package)
-            ):
+            if self.descriptor and self.descriptor.package and type_path.startswith(self.descriptor.package):
                 # Remove package prefix for types in the same package
                 return type_path[len(self.descriptor.package) + 1 :]
             else:
@@ -252,13 +236,9 @@ class ProtoFileBuilder:
     @property
     def _types(self) -> dict[int, str]:
         """Map of field type enum values to their string representations."""
-        return {
-            v: k.split("_")[1].lower() for k, v in descriptor_pb2.FieldDescriptorProto.Type.items()
-        }
+        return {v: k.split("_")[1].lower() for k, v in descriptor_pb2.FieldDescriptorProto.Type.items()}
 
     @property
     def _labels(self) -> dict[int, str]:
         """Map of field label enum values to their string representations."""
-        return {
-            v: k.split("_")[1].lower() for k, v in descriptor_pb2.FieldDescriptorProto.Label.items()
-        }
+        return {v: k.split("_")[1].lower() for k, v in descriptor_pb2.FieldDescriptorProto.Label.items()}

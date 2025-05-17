@@ -1,11 +1,11 @@
 """Factory for creating generator strategies."""
 
-
 from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 from pbreflect.pbgen.generators.strategies.betterproto import BetterProtoGeneratorStrategy
 from pbreflect.pbgen.generators.strategies.default import DefaultGeneratorStrategy
 from pbreflect.pbgen.generators.strategies.dynamic import DynamicGeneratorStrategy
 from pbreflect.pbgen.generators.strategies.mypy import MyPyGeneratorStrategy
+from pbreflect.pbgen.generators.strategies.pbreflect import PbReflectGeneratorStrategy
 
 
 class GeneratorFactoryImpl:
@@ -17,6 +17,7 @@ class GeneratorFactoryImpl:
             "default": DefaultGeneratorStrategy,
             "mypy": MyPyGeneratorStrategy,
             "betterproto": BetterProtoGeneratorStrategy,
+            "pbreflect": PbReflectGeneratorStrategy,
         }
 
     def create_generator(self, gen_type: str) -> GeneratorStrategy:

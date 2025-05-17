@@ -5,9 +5,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pbreflect.pbgen.errors import GenerationFailedError, NoProtoFilesError
+from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 from pbreflect.pbgen.utils.command import CommandExecutorImpl
 from pbreflect.pbgen.utils.file_finder import ProtoFileFinderImpl
 
+# Используем TYPE_CHECKING для избежания циклического импорта
 if TYPE_CHECKING:
     from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
 
@@ -37,71 +39,43 @@ class BaseGenerator:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
-    def _check_stubs_exists(self, proto_path: Path, include_dir: str, output_dir: str) -> bool:
-        """Check if stubs are already generated for a proto file.
+    def generate(self, output_dir: str, generator_strategy: GeneratorStrategy) -> None:
+        """Generate code using the specified generator strategy.
 
         Args:
-            proto_path: Path to proto file
-            include_dir: Directory with proto files
-            output_dir: Directory where to generate stubs
-
-        Returns:
-            True if stubs exist, False otherwise
-        """
-        path_from_include = Path(proto_path).relative_to(Path(include_dir))
-        patched_proto_path = Path(
-            path_from_include.as_posix()
-            .replace(".proto", "_pb2.py")
-            .replace("-", "_")
-            .replace(".", "/")
-        )
-        stubs_path = Path(output_dir).joinpath(patched_proto_path)
-        return stubs_path.exists()
-
-    def generate(self, proto_dir: str, output_dir: str, gen_type: str) -> None:
-        """Generate stubs for all proto files in the include directory.
-
-        Args:
-            proto_dir: Directory with proto files
-            output_dir: Directory where to generate stubs
-            gen_type: Type of generator to use
+            output_dir: Directory to output generated code
+            generator_strategy: Strategy to use for generation
 
         Raises:
             NoProtoFilesError: If no proto files are found
-            GenerationFailedError: If generation fails for any proto file
+            GenerationFailedError: If code generation fails
         """
+        self.logger.info("Starting generation python code...")
+
         # Ensure output directory exists
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-        # Create generator strategy
-        strategy = self.generator_factory.create_generator(gen_type)
-
         # Find proto files
-        protos = self.proto_finder.find_proto_files(proto_dir)
+        proto_files = self.proto_finder.find_proto_files()
+        if not proto_files:
+            raise NoProtoFilesError("No proto files found")
 
-        if not protos:
-            raise NoProtoFilesError(proto_dir)
+        # Generate code for each proto file
+        for proto_file in proto_files:
+            self.logger.info(f"Generating code for proto: {proto_file}...")
 
-        self.logger.info("Starting generation python code...")
-        for proto in protos:
-            if self._check_stubs_exists(proto, proto_dir, output_dir):
-                continue
-
-            self.logger.info(f"Generating code for proto: {proto}...")
-            command = strategy.command_template.format(
-                include=proto_dir, output=output_dir, proto=proto
+            # Format command with placeholders
+            command = generator_strategy.command_template.format(
+                include=self.proto_finder.proto_dir,
+                output=output_dir,
+                proto=proto_file,
             )
-            exit_code, stderr = self.command_executor.execute(command)
 
-            if stderr.strip():
-                for line in stderr.splitlines():
-                    starts_with_path = line.split(":")[0].endswith(".proto")
-                    if (
-                        "warning: " not in line.lower()
-                        and not line.startswith("Writing")
-                        and starts_with_path
-                    ):
-                        self.logger.error(stderr)
-                        raise GenerationFailedError
+            # Execute command
+            exit_code, stderr = self.command_executor.execute(command)
+            if exit_code != 0:
+                error_message = f"Failed to generate code for {proto_file}: {stderr}"
+                self.logger.error(error_message)
+                raise GenerationFailedError(error_message)
 
         self.logger.info("Generation completed!")

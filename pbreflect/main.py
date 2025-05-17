@@ -99,12 +99,10 @@ def get_protos(
     "gen_type",
     required=False,
     default="default",
-    type=click.Choice(["default", "mypy", "betterproto"]),
+    type=click.Choice(["default", "mypy", "betterproto", "pbreflect"]),
     help="Type of generator",
 )
-@click.option(
-    "-r", "--refresh", "refresh", required=False, is_flag=True, help="Clear output directory"
-)
+@click.option("-r", "--refresh", "refresh", required=False, is_flag=True, help="Clear output directory")
 def gen(proto_dir: str, output_dir: str, gen_type: str = "default", refresh: bool = False) -> None:
     """Command to generate code
 
@@ -115,7 +113,7 @@ def gen(proto_dir: str, output_dir: str, gen_type: str = "default", refresh: boo
         refresh: Clear output directory
     """
 
-    gen_type_literal = cast(Literal["default", "mypy", "betterproto"], gen_type)
+    gen_type_literal = cast(Literal["default", "mypy", "betterproto", "pbreflect"], gen_type)
     run(proto_dir, output_dir, gen_type_literal, refresh)
 
 

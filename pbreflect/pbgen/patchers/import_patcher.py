@@ -31,9 +31,7 @@ class ImportPatcher:
     def _patch_python_imports(self) -> None:
         """Patch imports in Python stub files."""
         output_files = [str(p) for p in self.code_dir.rglob("*.py")]
-        expected_root_path = str(
-            self.code_dir.absolute().relative_to(self.root_path).as_posix()
-        ).replace("/", ".")
+        expected_root_path = str(self.code_dir.absolute().relative_to(self.root_path).as_posix()).replace("/", ".")
 
         for f in output_files:
             imports = self._get_imports(Path(f))

@@ -1,7 +1,6 @@
 """BetterProto generator strategy implementation."""
 
 
-
 class BetterProtoGeneratorStrategy:
     """Strategy for betterproto stub generation."""
 

@@ -21,9 +21,4 @@ class DynamicGeneratorStrategy(GeneratorStrategy):
         Returns:
             Command template string
         """
-        return (
-            "python -m grpc_tools.protoc "
-            "--proto_path={include} "
-            f"--{self.compiler}_out={{output}} "
-            "{proto}"
-        )
+        return f"python -m grpc_tools.protoc --proto_path={{include}} --{self.compiler}_out={{output}} {{proto}}"

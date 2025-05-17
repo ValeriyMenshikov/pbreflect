@@ -18,4 +18,4 @@ class GeneratorStrategy(Protocol):
 
 
 # Определяем тип для стратегий генератора
-T_GeneratorStrategy = TypeVar('T_GeneratorStrategy', bound='GeneratorStrategy')
+T_GeneratorStrategy = TypeVar("T_GeneratorStrategy", bound="GeneratorStrategy")

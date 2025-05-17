@@ -196,9 +196,7 @@ class RecoverService:
 
             if root_certificates_path:
                 if not root_certificates_path.exists():
-                    raise FileNotFoundError(
-                        f"Root certificates file not found: {root_certificates_path}"
-                    )
+                    raise FileNotFoundError(f"Root certificates file not found: {root_certificates_path}")
                 with open(root_certificates_path, "rb") as f:
                     root_certificates = f.read()
 
@@ -210,9 +208,7 @@ class RecoverService:
 
             if certificate_chain_path:
                 if not certificate_chain_path.exists():
-                    raise FileNotFoundError(
-                        f"Certificate chain file not found: {certificate_chain_path}"
-                    )
+                    raise FileNotFoundError(f"Certificate chain file not found: {certificate_chain_path}")
                 with open(certificate_chain_path, "rb") as f:
                     certificate_chain = f.read()
 
@@ -282,9 +278,7 @@ class RecoverService:
             self._logger.error(f"Proto recovery failed: {e}")
             raise ProtoRecoveryError("Failed to recover proto files") from e
 
-    def _process_proto_descriptor(
-        self, descriptor: descriptor_pb2.FileDescriptorProto
-    ) -> Path | None:
+    def _process_proto_descriptor(self, descriptor: descriptor_pb2.FileDescriptorProto) -> Path | None:
         """Process a single proto descriptor.
 
         Args:

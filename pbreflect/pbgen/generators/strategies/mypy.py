@@ -1,7 +1,6 @@
 """Mypy generator strategy implementation."""
 
 
-
 class MyPyGeneratorStrategy:
     """Strategy for protobuf Python stub generation with mypy type interfaces."""
 
