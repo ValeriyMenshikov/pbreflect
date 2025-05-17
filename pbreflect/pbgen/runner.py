@@ -6,11 +6,9 @@ from pathlib import Path
 from typing import Literal, List
 
 from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
-from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 from pbreflect.pbgen.patchers.directory_structure_patcher import DirectoryStructurePatcher
 from pbreflect.pbgen.patchers.import_patcher import ImportPatcher
 from pbreflect.pbgen.patchers.mypy_patcher import MypyPatcher
-from pbreflect.pbgen.patchers.pbreflect_patcher import PbReflectPatcher
 from pbreflect.pbgen.patchers.proto_import_patcher import ProtoImportPatcher
 from pbreflect.pbgen.utils.command import CommandExecutorImpl
 from pbreflect.pbgen.utils.file_finder import ProtoFileFinderImpl
@@ -64,16 +62,7 @@ def run(
     generator.generate(output_dir, generator_strategy)
 
     # Patch generated code
-    patchers = [
-        DirectoryStructurePatcher(output_dir),
-        ImportPatcher(output_dir, root_path),
-    ]
-
-    # Add specific patchers based on generator type
-    if gen_type == "mypy":
-        patchers.append(MypyPatcher(output_dir))
-    elif gen_type == "pbreflect":
-        patchers.append(PbReflectPatcher(output_dir))
+    patchers = [DirectoryStructurePatcher(output_dir), ImportPatcher(output_dir, root_path), MypyPatcher(output_dir)]
 
     # Apply all patchers
     for patcher in patchers:

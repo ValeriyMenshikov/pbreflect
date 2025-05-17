@@ -3,7 +3,6 @@
 import grpc
 from typing import Dict, List, Optional, Union, Any, Callable, ClassVar, Type, cast, Iterator
 from google.protobuf.message import Message
-from nuke.grpc_client import BaseGrpcClient
 from abc import ABC
 
 {% for import_line in imports %}
@@ -53,10 +52,16 @@ class _{{ service.name }}Stub:
         {% endfor %}
 
 
-class {{ service.name }}Client(BaseGrpcClient, ABC):
+class {{ service.name }}Client:
     """Client for {{ service.name }} service."""
     
-    stub_factory = _{{ service.name }}Stub
+    def __init__(self, channel: Union[grpc.Channel, grpc.aio.Channel]) -> None:
+        """Initialize the client with a gRPC channel.
+        
+        Args:
+            channel: gRPC channel for communication
+        """
+        self._stub = _{{ service.name }}Stub(channel)
 
     {% for method in service.methods %}
     def {{ method.name }}(
@@ -83,12 +88,11 @@ class {{ service.name }}Client(BaseGrpcClient, ABC):
         Returns:
             gRPC call object
         """
-        call = self._do_call(
-            "{{ method.original_name }}",
+        call = self._stub.{{ method.original_name }}(
             {% if method.is_client_streaming %}
-            request=request_iterator,
+            request_iterator,
             {% else %}
-            request=request,
+            request,
             {% endif %}
             metadata=metadata,
             timeout=timeout,

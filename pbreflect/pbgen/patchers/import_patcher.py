@@ -3,6 +3,19 @@
 import re
 from pathlib import Path
 
+IMPORTS_BLACKLIST = (
+    "google",
+    "importlib",
+    "builtins",
+    "collections",
+    "sys",
+    "typing",
+    ".",
+    "__future__",
+    "abc",
+    "grpc",
+)
+
 
 class ImportPatcher:
     """Patcher for import statements in generated code.
@@ -36,11 +49,11 @@ class ImportPatcher:
         for f in output_files:
             imports = self._get_imports(Path(f))
             for imp in imports:
-                if (
-                    not imp.startswith(expected_root_path)
-                    and not imp.startswith("google")
-                    and not imp.endswith("._utilities")
-                ):
+                # Skip imports from the blacklist
+                if any(imp.startswith(blacklisted) for blacklisted in IMPORTS_BLACKLIST):
+                    continue
+
+                if not imp.startswith(expected_root_path) and not imp.endswith("._utilities"):
                     new_imp = f"{expected_root_path}.{imp}"
                     self._replace_import(imp, new_imp, Path(f))
 

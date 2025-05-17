@@ -70,19 +70,6 @@ class PbReflectPlugin:
 
         rendered = template.render(**context)
 
-        # Исправляем импорты, чтобы избежать префикса pb. для стандартных модулей
-        rendered = rendered.replace("from pb.typing import", "from typing import")
-        rendered = rendered.replace("from pb.abc import", "from abc import")
-        rendered = rendered.replace("from pb.nuke.grpc_client", "from nuke.grpc_client")
-
-        # Исправляем использование Empty без префикса
-        rendered = rendered.replace("response_deserializer=Empty.FromString", "response_deserializer=empty_pb2.Empty.FromString")
-        rendered = rendered.replace("-> grpc.aio.UnaryUnaryCall[SetInboundResultV1Request, Empty]", "-> grpc.aio.UnaryUnaryCall[SetInboundResultV1Request, empty_pb2.Empty]")
-
-        # Добавляем импорт cast, если его нет
-        if "cast(" in rendered and "from typing import cast" not in rendered and "import cast" not in rendered:
-            rendered = rendered.replace("from typing import", "from typing import cast, ")
-
         return rendered
 
     def process_request(self, request: plugin.CodeGeneratorRequest) -> plugin.CodeGeneratorResponse:

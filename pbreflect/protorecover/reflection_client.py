@@ -315,23 +315,16 @@ class GrpcReflectionClient:
         Returns:
             List of imports
         """
-        imports = [
-            "import grpc",
-            "from typing import Dict, List, Any, Callable, ClassVar, Type",
-            "from google.protobuf.message import Message",
-            "from nuke.grpc_client import BaseGrpcClient",
-            "from abc import ABC",
-            "from typing import cast, Union, Optional",
-        ]
+        imports = []
 
         # Импортируем классы из основного файла pb2
         # Формируем полный путь к файлу для импорта
         file_path = proto_file.name.replace(".proto", "_pb2")
         # Если имя файла не содержит путь, то используем просто имя файла
         if "/" not in proto_file.name:
-            import_path = f"pb.{file_path}"
+            import_path = f"{file_path}"
         else:
-            import_path = f"pb.{'.'.join(proto_file.name.split('/')[:-1])}.{file_path.split('/')[-1]}"
+            import_path = f"{'.'.join(proto_file.name.split('/')[:-1])}.{file_path.split('/')[-1]}"
 
         # Собираем имена всех сообщений для импорта
         message_names = [message.name for message in proto_file.message_type]

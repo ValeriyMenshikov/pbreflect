@@ -266,7 +266,18 @@ class RecoverService:
                 self._logger.warning("No proto descriptors found on the server")
                 return saved_files
 
+            # Список файлов, которые нужно исключить из обработки
+            excluded_files = [
+                "grpc/reflection/v1alpha/reflection.proto",
+                "reflection.proto",
+            ]
+
             for proto_name, proto_descriptor in descriptors.items():
+                # Пропускаем файлы reflection.proto
+                if any(proto_name.endswith(excluded) for excluded in excluded_files):
+                    self._logger.info(f"Skipping reflection service proto: {proto_name}")
+                    continue
+
                 file_path = self._process_proto_descriptor(proto_descriptor)
                 if file_path:
                     saved_files[proto_name] = file_path
