@@ -160,8 +160,13 @@ class GrpcReflectionClient:
         """
         methods = []
         for method in service.method:
-            input_type = method.input_type.split(".")[-1]
-            output_type = method.output_type.split(".")[-1]
+            # Сохраняем полный путь к типу (убираем начальную точку, если она есть)
+            full_input_type = method.input_type[1:] if method.input_type.startswith('.') else method.input_type
+            full_output_type = method.output_type[1:] if method.output_type.startswith('.') else method.output_type
+            
+            # Преобразуем полный путь к типу в путь к модулю Python
+            input_type = self._get_python_type_path(full_input_type)
+            output_type = self._get_python_type_path(full_output_type)
 
             # Определяем, является ли метод потоковым
             is_server_streaming = method.server_streaming
@@ -179,6 +184,33 @@ class GrpcReflectionClient:
             )
 
         return methods
+        
+    def _get_python_type_path(self, proto_type_path: str) -> str:
+        """Преобразует полный путь к типу protobuf в путь к модулю Python.
+        
+        Args:
+            proto_type_path: Полный путь к типу в формате protobuf (например, 'google.protobuf.Empty')
+            
+        Returns:
+            Путь к типу в формате Python (например, 'empty_pb2.Empty')
+        """
+        if not proto_type_path or '.' not in proto_type_path:
+            return proto_type_path
+            
+        # Разделяем путь на компоненты (убираем начальную точку, если она есть)
+        path = proto_type_path[1:] if proto_type_path.startswith('.') else proto_type_path
+        components = path.split('.')
+        type_name = components[-1]  # Последний компонент - это имя типа
+        
+        # Для стандартных типов Google Protobuf используем соответствующий модуль
+        if len(components) >= 3 and components[0] == 'google' and components[1] == 'protobuf':
+            # Формируем имя модуля на основе последнего компонента (имени типа)
+            # Например, для 'google.protobuf.Empty' -> 'empty_pb2.Empty'
+            module_name = self._camel_to_snake(type_name).lower() + '_pb2'
+            return f"{module_name}.{type_name}"
+        
+        # Для других типов возвращаем короткое имя для обратной совместимости
+        return type_name
 
     def get_message_fields(self, message: descriptor_pb2.DescriptorProto) -> list[dict]:
         """Get fields from a message descriptor.
@@ -332,11 +364,14 @@ class GrpcReflectionClient:
             imports.append(f"from {import_path} import {', '.join(message_names)}")
 
         # Add imports for dependencies
+        dependency_modules = set()
         for dependency in proto_file.dependency:
             # Обрабатываем стандартные google protobuf зависимости
             if dependency.startswith("google/protobuf/"):
-                module_name = dependency.replace(".proto", "_pb2").split("/")[-1]
-                imports.append(f"from google.protobuf import {module_name}")
+                # Извлекаем имя модуля из пути к файлу (например, 'empty' из 'google/protobuf/empty.proto')
+                module_name = dependency.replace(".proto", "").split("/")[-1]
+                dependency_modules.add(module_name)
+                imports.append(f"from google.protobuf import {module_name}_pb2")
             else:
                 # Для других зависимостей используем относительные импорты
                 module_name = dependency.replace(".proto", "_pb2").split("/")[-1]
