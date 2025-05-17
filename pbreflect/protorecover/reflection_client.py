@@ -14,7 +14,7 @@ class GrpcReflectionClient:
     from a gRPC server that has the reflection service enabled.
     """
 
-    def __init__(self, channel: grpc.Channel) -> None:
+    def __init__(self, channel: grpc.Channel | None) -> None:
         """Initialize the reflection client.
 
         Args:
@@ -63,7 +63,10 @@ class GrpcReflectionClient:
             grpc.RpcError: If the reflection service call fails
         """
         request = reflection_pb2.ServerReflectionRequest(list_services="")
-        response_iterator = self._stub.ServerReflectionInfo(iter([request]))
+        response_iterator = self._stub.ServerReflectionInfo(iter([request])) if self._stub else None
+
+        if response_iterator is None:
+            return []
 
         try:
             response = next(response_iterator)
@@ -81,7 +84,10 @@ class GrpcReflectionClient:
             grpc.RpcError: If the reflection service call fails
         """
         request = reflection_pb2.ServerReflectionRequest(file_containing_symbol=service_name)
-        response_iterator = self._stub.ServerReflectionInfo(iter([request]))
+        response_iterator = self._stub.ServerReflectionInfo(iter([request])) if self._stub else None
+
+        if response_iterator is None:
+            return
 
         try:
             response = next(response_iterator)
@@ -121,7 +127,10 @@ class GrpcReflectionClient:
             grpc.RpcError: If the reflection service call fails
         """
         request = reflection_pb2.ServerReflectionRequest(file_by_filename=file_name)
-        response_iterator = self._stub.ServerReflectionInfo(iter([request]))
+        response_iterator = self._stub.ServerReflectionInfo(iter([request])) if self._stub else None
+
+        if response_iterator is None:
+            return
 
         try:
             response = next(response_iterator)

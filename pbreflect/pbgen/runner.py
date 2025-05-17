@@ -14,6 +14,7 @@ from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
 from pbreflect.pbgen.patchers.directory_structure_patcher import DirectoryStructurePatcher
 from pbreflect.pbgen.patchers.import_patcher import ImportPatcher
 from pbreflect.pbgen.patchers.mypy_patcher import MypyPatcher
+from pbreflect.pbgen.patchers.patcher_protocol import CodePatcher
 from pbreflect.pbgen.patchers.proto_import_patcher import ProtoImportPatcher
 from pbreflect.pbgen.utils.command import CommandExecutorImpl
 from pbreflect.pbgen.utils.file_finder import ProtoFileFinderImpl
@@ -53,7 +54,7 @@ def run(
 
     root_path = root_path or Path.cwd()
 
-    proto_patchers = [
+    proto_patchers: list[CodePatcher] = [
         ProtoImportPatcher(proto_dir),
     ]
 
@@ -73,7 +74,11 @@ def run(
     generator.generate(output_dir, generator_strategy)
 
     # Patch generated code
-    patchers = [DirectoryStructurePatcher(output_dir), ImportPatcher(output_dir, root_path), MypyPatcher(output_dir)]
+    patchers: list[CodePatcher] = [
+        DirectoryStructurePatcher(output_dir),
+        ImportPatcher(output_dir, root_path),
+        MypyPatcher(output_dir),
+    ]
 
     # Apply all patchers
     for patcher in patchers:

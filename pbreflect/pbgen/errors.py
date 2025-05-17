@@ -4,7 +4,7 @@
 class GenerationFailedError(Exception):
     """Class for exception while generating stubs"""
 
-    def __init__(self, message: str = None) -> None:
+    def __init__(self, message: str | None = None) -> None:
         self.message = message or "Errors while generating stubs! Check logs."
         super().__init__(self.message)
 
