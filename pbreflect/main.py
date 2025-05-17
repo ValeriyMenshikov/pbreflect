@@ -1,7 +1,9 @@
-import click
 import pathlib
-from typing import Optional
+from typing import Literal, cast
 
+import click
+
+from pbreflect.pbgen.runner import run
 from pbreflect.protorecover.recover_service import RecoverService
 
 
@@ -33,9 +35,9 @@ def get_protos(
     host: str,
     output: str,
     use_tls: bool,
-    root_cert: Optional[pathlib.Path],
-    private_key: Optional[pathlib.Path],
-    cert_chain: Optional[pathlib.Path],
+    root_cert: pathlib.Path | None,
+    private_key: pathlib.Path | None,
+    cert_chain: pathlib.Path | None,
 ) -> None:
     """Recover proto files from a gRPC server using reflection.
 
@@ -64,19 +66,59 @@ def get_protos(
         certificate_chain_path=cert_chain,
     ) as service:
         try:
-            saved_files = service.recover_protos()
+            saved_files = service.recover_proto_files()
             if saved_files:
                 click.echo(f"Successfully recovered {len(saved_files)} proto files to {output_dir}")
-                for proto_name, file_path in saved_files.items():
-                    click.echo(f"  - {proto_name}: {file_path}")
+                for file_path in saved_files:
+                    click.echo(f"  - {file_path.name}: {file_path}")
             else:
                 click.echo("No proto files were recovered")
         except Exception as e:
             click.echo(f"Error: {e}", err=True)
-            raise click.Abort()
+            raise click.Abort() from e
+
+
+@click.command("generate")
+@click.option(
+    "-p",
+    "--proto-dir",
+    "proto_dir",
+    required=True,
+    help="Directory with proto files",
+)
+@click.option(
+    "-o",
+    "--output-dir",
+    "output_dir",
+    required=True,
+    help="Directory where to generate code",
+)
+@click.option(
+    "-t",
+    "--gen-type",
+    "gen_type",
+    required=False,
+    default="default",
+    type=click.Choice(["default", "mypy", "betterproto", "pbreflect"]),
+    help="Type of generator",
+)
+@click.option("-r", "--refresh", "refresh", required=False, is_flag=True, help="Clear output directory")
+def gen(proto_dir: str, output_dir: str, gen_type: str = "default", refresh: bool = False) -> None:
+    """Command to generate code
+
+    Args:
+        proto_dir: Directory with proto files
+        output_dir: Directory where to generate code
+        gen_type: Type of generator
+        refresh: Clear output directory
+    """
+
+    gen_type_literal = cast(Literal["default", "mypy", "betterproto", "pbreflect"], gen_type)
+    run(proto_dir, output_dir, gen_type_literal, refresh)
 
 
 cli.add_command(get_protos)
+cli.add_command(gen)
 
 if __name__ == "__main__":
     cli()

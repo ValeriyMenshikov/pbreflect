@@ -12,6 +12,7 @@ PBReflect is a powerful tool for recovering Protocol Buffer (protobuf) definitio
 - **TLS Support**: Supports secure connections with custom certificates
 - **Dependency Resolution**: Correctly handles dependencies between proto files
 - **Simple CLI**: Easy-to-use command-line interface
+- **Client Generation**: Generate Python client libraries from `.proto` files with multiple generator strategies
 
 ## Installation
 
@@ -51,6 +52,43 @@ pbreflect get-protos -h secure.example.com:443 -o ./protos \
   --cert-chain ./certs/client.pem
 ```
 
+## Client Code Generation
+
+PBReflect can generate client code from proto files:
+
+```bash
+# Generate client code from proto files
+pbreflect generate --proto-dir ./protos --output-dir ./generated --gen-type pbreflect
+```
+
+### Generator Strategies
+
+PBReflect supports multiple code generation strategies:
+
+- **default**: Standard protoc Python output
+- **mypy**: Standard output with mypy type annotations
+- **betterproto**: Uses betterproto generator for more Pythonic API
+- **pbreflect**: Custom generator with enhanced gRPC client support
+
+Example:
+
+```bash
+# Generate code using the betterproto strategy
+pbreflect generate --proto-dir ./protos --output-dir ./generated --gen-type betterproto
+```
+
+## CLI Commands
+
+PBReflect provides a comprehensive CLI interface:
+
+```
+pbreflect get-protos  # Recover proto files from a running gRPC server
+pbreflect generate    # Generate client code from proto files
+pbreflect info        # Display information about available services
+```
+
+Use `--help` with any command to see all available options.
+
 ## Programmatic Usage
 
 You can also use PBReflect in your Python code:
@@ -85,7 +123,6 @@ with RecoverService(
 
 ## Requirements
 
-- Python 3.8 or higher
 - gRPC server with reflection service enabled
 
 ## How It Works
@@ -108,13 +145,23 @@ The process involves:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- Setting up your development environment
+- Running tests
+- Code style and conventions
+- Pull request process
+- Issue reporting
+
+## Publishing
+
+For maintainers, we have documented the release process in [PUBLISHING.md](PUBLISHING.md), which covers:
+
+- Version bumping
+- Building packages
+- Publishing to PyPI
+- Creating GitHub releases
+- Documentation updates
 
 ## License
 

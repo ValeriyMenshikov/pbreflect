@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "pbreflect"
-version = "0.1.0"
-description = "A tool for recovering Protocol Buffer definitions from gRPC services using reflection API"
+version = "1.0.0"
+description = "A tool for recovering Protocol Buffer definitions from gRPC services using reflection API and generating client code"
 authors = ["Menshikov Valeriy Sergeevich <vmenshikov@ozon.ru>"]
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/ValeriyMenshikov/pbreflect"
-keywords = ["grpc", "protobuf", "reflection", "proto", "protocol-buffers"]
+keywords = ["grpc", "protobuf", "reflection", "proto", "protocol-buffers", "code-generation"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -18,8 +18,12 @@ classifiers = [
 ]
 packages = [{ include = "pbreflect" }]
 
-[tool.poetry.scripts]
+[project.entry-points.console_scripts]
 pbreflect = "pbreflect.main:cli"
+protoc-gen-pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
+
+[project.entry-points.protoc_gen_plugins]
+pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -28,6 +32,12 @@ grpcio-reflection = "^1.71.0"
 pydantic = "^2.11.3"
 grpcio-tools = "^1.71.0"
 click = "^8.1.8"
+mypy-protobuf = ">=3.6.0"
+grpcio = "^1.71.0"
+betterproto = "^1.2.5"
+grpc-stubs = "^1.53.0.6"
+protobuf = "^5.0.0"
+types-protobuf = "^4.24.0.20240311"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.7"
@@ -41,7 +51,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]
@@ -52,7 +62,7 @@ ignore = []
 known-first-party = ["pbreflect"]
 
 [tool.black]
-line-length = 100
+line-length = 120
 target-version = ["py311"]
 
 [tool.mypy]

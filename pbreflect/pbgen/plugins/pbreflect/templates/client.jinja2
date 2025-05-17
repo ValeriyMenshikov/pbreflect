@@ -1,0 +1,117 @@
+"""Generated client code for {{ package }} using pbreflect.
+
+This module contains auto-generated gRPC client classes for the {{ package }} package.
+It provides strongly-typed async gRPC clients that follow the "duck typing" principle.
+"""
+
+import grpc
+from typing import Dict, List, Optional, Union, Any, Callable, ClassVar, Type, cast, Iterator
+from google.protobuf.message import Message
+from abc import ABC
+
+{# Import all required modules, skipping duplicates #}
+{% for import_line in imports %}
+{% if import_line.startswith("import grpc") or import_line.startswith("from typing") or import_line.startswith("from google.protobuf.message") or import_line.startswith("from nuke.grpc_client") or import_line.startswith("from abc") %}
+{% else %}
+{{ import_line }}
+{% endif %}
+{% endfor %}
+
+{% if services %}
+{% for service in services %}
+class _{{ service.name }}Stub:
+    """Internal stub class for {{ service.name }} service.
+    
+    This class provides direct access to the gRPC methods exposed by the service.
+    It should not be used directly, but through the {{ service.name }}Client class.
+    """
+    
+    def __init__(self, channel: Union[grpc.Channel, grpc.aio.Channel]) -> None:
+        """Initialize the stub with a gRPC channel.
+        
+        Args:
+            channel: gRPC channel for communication
+        """
+        {# Generate method stubs based on streaming type #}
+        {% for method in service.methods %}
+        {% if method.is_client_streaming and method.is_server_streaming %}
+        self.{{ method.original_name }} = channel.stream_stream(
+            "{{ package }}.{{ service.name }}/{{ method.original_name }}",
+            request_serializer={{ method.input_type }}.SerializeToString,
+            response_deserializer={{ method.output_type }}.FromString,
+        )
+        {% elif method.is_client_streaming %}
+        self.{{ method.original_name }} = channel.stream_unary(
+            "{{ package }}.{{ service.name }}/{{ method.original_name }}",
+            request_serializer={{ method.input_type }}.SerializeToString,
+            response_deserializer={{ method.output_type }}.FromString,
+        )
+        {% elif method.is_server_streaming %}
+        self.{{ method.original_name }} = channel.unary_stream(
+            "{{ package }}.{{ service.name }}/{{ method.original_name }}",
+            request_serializer={{ method.input_type }}.SerializeToString,
+            response_deserializer={{ method.output_type }}.FromString,
+        )
+        {% else %}
+        self.{{ method.original_name }} = channel.unary_unary(
+            "{{ package }}.{{ service.name }}/{{ method.original_name }}",
+            request_serializer={{ method.input_type }}.SerializeToString,
+            response_deserializer={{ method.output_type }}.FromString,
+        )
+        {% endif %}
+        {% endfor %}
+
+
+class {{ service.name }}Client:
+    """Client for the {{ service.name }} service.
+    
+    This class provides a strongly-typed async interface to the gRPC service.
+    """
+
+    def __init__(self, channel: Union[grpc.Channel, grpc.aio.Channel]) -> None:
+        """Initialize the client with a gRPC channel.
+        
+        Args:
+            channel: gRPC channel for communication
+        """
+        self._stub = _{{ service.name }}Stub(channel)
+
+    {# Generate client methods with proper type annotations #}
+    {% for method in service.methods %}
+    def {{ method.name }}(
+        self,
+        {% if method.is_client_streaming %}
+        request_iterator: Iterator[{{ method.input_type }}],
+        {% else %}
+        request: {{ method.input_type }},
+        {% endif %}
+        metadata: Optional[grpc.aio.Metadata] = None,
+        timeout: Optional[float] = None,
+    ){% if method.is_client_streaming and method.is_server_streaming %} -> grpc.aio.StreamStreamCall[{{ method.input_type }}, {{ method.output_type }}]{% elif method.is_client_streaming %} -> grpc.aio.StreamUnaryCall[{{ method.input_type }}, {{ method.output_type }}]{% elif method.is_server_streaming %} -> grpc.aio.UnaryStreamCall[{{ method.input_type }}, {{ method.output_type }}]{% else %} -> grpc.aio.UnaryUnaryCall[{{ method.input_type }}, {{ method.output_type }}]{% endif %}:
+        """Call {{ method.original_name }} method.
+
+        Args:
+            {% if method.is_client_streaming %}
+            request_iterator: Iterator of request messages
+            {% else %}
+            request: Request message
+            {% endif %}
+            metadata: Optional metadata
+            timeout: Optional timeout
+
+        Returns:
+            gRPC call object
+        """
+        call = self._stub.{{ method.original_name }}(
+            {% if method.is_client_streaming %}
+            request_iterator,
+            {% else %}
+            request,
+            {% endif %}
+            metadata=metadata,
+            timeout=timeout,
+        )
+        return cast({% if method.is_client_streaming and method.is_server_streaming %}grpc.aio.StreamStreamCall[{{ method.input_type }}, {{ method.output_type }}]{% elif method.is_client_streaming %}grpc.aio.StreamUnaryCall[{{ method.input_type }}, {{ method.output_type }}]{% elif method.is_server_streaming %}grpc.aio.UnaryStreamCall[{{ method.input_type }}, {{ method.output_type }}]{% else %}grpc.aio.UnaryUnaryCall[{{ method.input_type }}, {{ method.output_type }}]{% endif %}, call)
+    {% endfor %}
+{% endfor %}
+{% endif %}
