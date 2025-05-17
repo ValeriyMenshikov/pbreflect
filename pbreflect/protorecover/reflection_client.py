@@ -165,6 +165,7 @@ class GrpcReflectionClient:
 
             # Определяем, является ли метод потоковым
             is_server_streaming = method.server_streaming
+            is_client_streaming = method.client_streaming
 
             methods.append(
                 {
@@ -173,6 +174,7 @@ class GrpcReflectionClient:
                     "input_type": input_type,
                     "output_type": output_type,
                     "is_server_streaming": is_server_streaming,
+                    "is_client_streaming": is_client_streaming,
                 }
             )
 
@@ -325,7 +327,11 @@ class GrpcReflectionClient:
         # Импортируем классы из основного файла pb2
         # Формируем полный путь к файлу для импорта
         file_path = proto_file.name.replace(".proto", "_pb2")
-        import_path = f"pb.{'.'.join(proto_file.name.split('/')[:-1])}.{file_path.split('/')[-1]}"
+        # Если имя файла не содержит путь, то используем просто имя файла
+        if "/" not in proto_file.name:
+            import_path = f"pb.{file_path}"
+        else:
+            import_path = f"pb.{'.'.join(proto_file.name.split('/')[:-1])}.{file_path.split('/')[-1]}"
 
         # Собираем имена всех сообщений для импорта
         message_names = [message.name for message in proto_file.message_type]
