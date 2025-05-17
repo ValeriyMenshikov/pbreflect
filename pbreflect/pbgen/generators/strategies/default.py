@@ -1,6 +1,5 @@
 """Default generator strategy implementation."""
 
-from pathlib import Path
 
 
 class DefaultGeneratorStrategy:

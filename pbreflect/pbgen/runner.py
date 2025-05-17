@@ -3,7 +3,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Literal, List
+from typing import Literal
 
 from pbreflect.pbgen.generators.base import BaseGenerator
 from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
@@ -32,12 +32,16 @@ def run(
         refresh: Whether to refresh the output directory
         root_path: Root project directory
     """
+    # Ensure proto directory exists
+    if not os.path.exists(proto_dir):
+        raise FileNotFoundError(f"Proto directory not found: {proto_dir}")
+
+    # Refresh output directory if needed
     if refresh and os.path.exists(output_dir):
         shutil.rmtree(output_dir)
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Use current directory as root path if not specified
     root_path = root_path or Path.cwd()
 
     # Patch proto files before generation
@@ -62,7 +66,7 @@ def run(
     )
 
     # Create patchers for generated code
-    patchers: List[CodePatcher] = [
+    patchers: list[CodePatcher] = [
         DirectoryStructurePatcher(output_dir),
         ImportPatcher(output_dir, root_path),
     ]
@@ -70,6 +74,9 @@ def run(
     # Add mypy patcher if needed
     if gen_type == "mypy":
         patchers.append(MypyPatcher(output_dir))
+
+    # Add proto import patcher
+    patchers.append(ProtoImportPatcher(output_dir))
 
     # Apply all patchers
     for patcher in patchers:

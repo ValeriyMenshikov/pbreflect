@@ -1,8 +1,7 @@
 """Factory for creating generator strategies."""
 
-from pathlib import Path
-from typing import Type
 
+from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 from pbreflect.pbgen.generators.strategies.betterproto import BetterProtoGeneratorStrategy
 from pbreflect.pbgen.generators.strategies.default import DefaultGeneratorStrategy
 from pbreflect.pbgen.generators.strategies.dynamic import DynamicGeneratorStrategy
@@ -14,13 +13,13 @@ class GeneratorFactoryImpl:
 
     def __init__(self) -> None:
         """Initialize the generator factory."""
-        self.strategies = {
+        self.strategies: dict[str, type[GeneratorStrategy]] = {
             "default": DefaultGeneratorStrategy,
             "mypy": MyPyGeneratorStrategy,
             "betterproto": BetterProtoGeneratorStrategy,
         }
 
-    def create_generator(self, gen_type: str):
+    def create_generator(self, gen_type: str) -> GeneratorStrategy:
         """Create a generator strategy based on the specified type.
 
         Args:
@@ -36,4 +35,8 @@ class GeneratorFactoryImpl:
             return self.strategies[gen_type]()
 
         # For custom generators, use dynamic strategy
-        return DynamicGeneratorStrategy(gen_type)
+        # Явно указываем тип для mypy
+        dynamic_strategy = DynamicGeneratorStrategy(gen_type)
+        # Используем assert для проверки типа во время выполнения
+        assert isinstance(dynamic_strategy, GeneratorStrategy)
+        return dynamic_strategy

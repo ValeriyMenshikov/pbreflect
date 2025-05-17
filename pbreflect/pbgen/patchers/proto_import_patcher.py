@@ -90,6 +90,8 @@ class ProtoImportPatcher:
         with open(file_path, encoding="UTF-8") as proto:
             for line in proto.readlines():
                 if line.strip().startswith("import "):
-                    import_path = re.search(r'"(.*?)"', line).group(1)
-                    imports.append(import_path)
+                    match = re.search(r'"(.*?)"', line)
+                    if match:
+                        import_path = match.group(1)
+                        imports.append(import_path)
         return imports

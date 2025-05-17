@@ -145,8 +145,8 @@ class RecoverService:
         try:
             host, port = target.split(":")
             return host, port
-        except ValueError:
-            raise ValueError(f"Invalid target format '{target}'. Expected 'host:port'")
+        except ValueError as err:
+            raise ValueError(f"Invalid target format '{target}'. Expected 'host:port'") from err
 
     @staticmethod
     def _validate_connection(host: str, port: str) -> None:

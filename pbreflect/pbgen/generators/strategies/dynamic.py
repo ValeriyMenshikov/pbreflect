@@ -1,9 +1,9 @@
 """Dynamic generator strategy implementation."""
 
-from pathlib import Path
+from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 
 
-class DynamicGeneratorStrategy:
+class DynamicGeneratorStrategy(GeneratorStrategy):
     """Strategy for using a dynamically specified compiler."""
 
     def __init__(self, compiler: str) -> None:
@@ -22,7 +22,8 @@ class DynamicGeneratorStrategy:
             Command template string
         """
         return (
-            "python -m grpc.tools.protoc -I {include}"
-            f" --python_{self.compiler}_out"
-            "={output} {proto}"
+            "python -m grpc_tools.protoc "
+            "--proto_path={include} "
+            f"--{self.compiler}_out={{output}} "
+            "{proto}"
         )

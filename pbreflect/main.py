@@ -1,4 +1,5 @@
 import pathlib
+from typing import Literal, cast
 
 import click
 
@@ -74,42 +75,48 @@ def get_protos(
                 click.echo("No proto files were recovered")
         except Exception as e:
             click.echo(f"Error: {e}", err=True)
-            raise click.Abort()
+            raise click.Abort() from e
 
 
 @click.command("generate")
 @click.option(
-    "-t",
-    "--gen_type",
-    "gen_type",
-    required=False,
-    help="Type of generator, also you can pass name of your custom compiler",
-    type=click.Choice(["default", "mypy", "betterproto"]),
-    default="default",
-)
-@click.option(
-    "-p", "--proto_dir", "proto_dir", required=True, help="Path to directory with proto files"
+    "-p",
+    "--proto-dir",
+    "proto_dir",
+    required=True,
+    help="Directory with proto files",
 )
 @click.option(
     "-o",
-    "--output_dir",
+    "--output-dir",
     "output_dir",
     required=True,
-    help="Path to directory where to put generated Python code",
+    help="Directory where to generate code",
+)
+@click.option(
+    "-t",
+    "--gen-type",
+    "gen_type",
+    required=False,
+    default="default",
+    type=click.Choice(["default", "mypy", "betterproto"]),
+    help="Type of generator",
 )
 @click.option(
     "-r", "--refresh", "refresh", required=False, is_flag=True, help="Clear output directory"
 )
-def gen(proto_dir: str, output_dir: str, gen_type: str = "default", refresh: bool = False):
-    """
-    Command to generate code
+def gen(proto_dir: str, output_dir: str, gen_type: str = "default", refresh: bool = False) -> None:
+    """Command to generate code
 
-    :param proto_dir: Directory with proto files
-    :param output_dir: Directory where to generate code
-    :param gen_type: Type of generator
-    :param refresh: Clear output directory
+    Args:
+        proto_dir: Directory with proto files
+        output_dir: Directory where to generate code
+        gen_type: Type of generator
+        refresh: Clear output directory
     """
-    run(proto_dir, output_dir, gen_type, refresh)
+
+    gen_type_literal = cast(Literal["default", "mypy", "betterproto"], gen_type)
+    run(proto_dir, output_dir, gen_type_literal, refresh)
 
 
 cli.add_command(get_protos)

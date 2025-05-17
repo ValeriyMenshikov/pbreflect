@@ -19,10 +19,13 @@ class CommandExecutorImpl:
         process.wait()
 
         # Handle potential encoding issues
-        try:
-            stderr = process.stderr.read().decode("utf-8")
-        except UnicodeDecodeError:
-            stderr = process.stderr.read().decode("windows-1251")
+        if process.stderr is not None:
+            try:
+                stderr = process.stderr.read().decode("utf-8")
+            except UnicodeDecodeError:
+                stderr = process.stderr.read().decode("windows-1251")
+        else:
+            stderr = ""
 
         process.communicate()
         return process.returncode, stderr

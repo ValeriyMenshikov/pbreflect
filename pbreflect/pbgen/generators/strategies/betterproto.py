@@ -1,6 +1,5 @@
 """BetterProto generator strategy implementation."""
 
-from pathlib import Path
 
 
 class BetterProtoGeneratorStrategy:

@@ -2,22 +2,14 @@
 
 import logging
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING
 
 from pbreflect.pbgen.errors import GenerationFailedError, NoProtoFilesError
+from pbreflect.pbgen.utils.command import CommandExecutorImpl
+from pbreflect.pbgen.utils.file_finder import ProtoFileFinderImpl
 
-
-class GeneratorStrategy(Protocol):
-    """Protocol for generator strategies."""
-
-    @property
-    def command_template(self) -> str:
-        """Command template for this generator.
-
-        Returns:
-            Command template string
-        """
-        ...
+if TYPE_CHECKING:
+    from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
 
 
 class BaseGenerator:
@@ -25,9 +17,9 @@ class BaseGenerator:
 
     def __init__(
         self,
-        proto_finder,
-        command_executor,
-        generator_factory,
+        proto_finder: ProtoFileFinderImpl,
+        command_executor: CommandExecutorImpl,
+        generator_factory: "GeneratorFactoryImpl",
     ) -> None:
         """Initialize the base generator.
 

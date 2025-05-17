@@ -1,6 +1,5 @@
 """Mypy generator strategy implementation."""
 
-from pathlib import Path
 
 
 class MyPyGeneratorStrategy:

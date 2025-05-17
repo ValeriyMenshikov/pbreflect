@@ -61,6 +61,8 @@ class ImportPatcher:
         with open(file_path, encoding="UTF-8") as proto:
             for line in proto.readlines():
                 if line.strip().startswith("from "):
-                    import_path = re.search(r"from(.*?)import", line).group(1).strip()
-                    imports.append(import_path)
+                    match = re.search(r"from(.*?)import", line)
+                    if match:
+                        import_path = match.group(1).strip()
+                        imports.append(import_path)
         return imports
