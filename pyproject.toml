@@ -18,11 +18,11 @@ classifiers = [
 ]
 packages = [{ include = "pbreflect" }]
 
-[project.entry-points.console_scripts]
+[tool.poetry.scripts]
 pbreflect = "pbreflect.main:cli"
 protoc-gen-pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 
-[project.entry-points.protoc_gen_plugins]
+[tool.poetry.plugins.protoc_gen_plugins]
 pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 
 [tool.poetry.dependencies]

@@ -140,8 +140,6 @@ class GrpcReflectionClient:
             # No response received
             pass
 
-    # Дополнительные методы для работы с дескрипторами
-
     def get_service_methods(self, service: descriptor_pb2.ServiceDescriptorProto) -> list[dict]:
         """Get methods from a service descriptor.
 
@@ -153,15 +151,12 @@ class GrpcReflectionClient:
         """
         methods = []
         for method in service.method:
-            # Сохраняем полный путь к типу (убираем начальную точку, если она есть)
             full_input_type = method.input_type[1:] if method.input_type.startswith(".") else method.input_type
             full_output_type = method.output_type[1:] if method.output_type.startswith(".") else method.output_type
 
-            # Преобразуем полный путь к типу в путь к модулю Python
             input_type = self._get_python_type_path(full_input_type)
             output_type = self._get_python_type_path(full_output_type)
 
-            # Определяем, является ли метод потоковым
             is_server_streaming = method.server_streaming
             is_client_streaming = method.client_streaming
 
@@ -178,7 +173,8 @@ class GrpcReflectionClient:
 
         return methods
 
-    def _get_python_type_path(self, proto_type_path: str) -> str:
+    @staticmethod
+    def _get_python_type_path(proto_type_path: str) -> str:
         """Преобразует полный путь к типу protobuf в путь к модулю Python.
 
         Args:
@@ -205,7 +201,8 @@ class GrpcReflectionClient:
         # Для других типов возвращаем короткое имя для обратной совместимости
         return type_name
 
-    def get_message_fields(self, message: descriptor_pb2.DescriptorProto) -> list[dict]:
+    @staticmethod
+    def get_message_fields(message: descriptor_pb2.DescriptorProto) -> list[dict]:
         """Get fields from a message descriptor.
 
         Args:
@@ -229,7 +226,8 @@ class GrpcReflectionClient:
 
         return fields
 
-    def get_enum_values(self, enum: descriptor_pb2.EnumDescriptorProto) -> list[dict]:
+    @staticmethod
+    def get_enum_values(enum: descriptor_pb2.EnumDescriptorProto) -> list[dict]:
         """Get values from an enum descriptor.
 
         Args:
