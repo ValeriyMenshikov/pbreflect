@@ -98,7 +98,7 @@ def get_protos(
     "--gen-type",
     "gen_type",
     required=False,
-    default="default",
+    default="pbreflect",
     type=click.Choice(["default", "mypy", "betterproto", "pbreflect"]),
     help="Type of generator",
 )
@@ -107,7 +107,7 @@ def get_protos(
     "--async-mode",
     "async_mode",
     type=click.Choice(["true", "false"]),
-    default="true",
+    default="false",
     help="Generate async (true) or sync (false) client code (only for pbreflect generator)",
 )
 def gen(

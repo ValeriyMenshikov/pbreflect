@@ -43,11 +43,10 @@ class PbReflectPlugin:
         """
         # Create Jinja2 environment
         template_path = self.get_template_path()
-        env = jinja2.Environment(
+        env = jinja2.Environment(  # noqa: S701
             loader=jinja2.FileSystemLoader(template_path),
             trim_blocks=True,
             lstrip_blocks=True,
-            autoescape=True,
         )
         return env.get_template(template_name)
 
@@ -76,7 +75,8 @@ class PbReflectPlugin:
 
         return rendered
 
-    def parse_parameters(self, parameter_string: str) -> dict[str, Any]:
+    @staticmethod
+    def parse_parameters(parameter_string: str) -> dict[str, Any]:
         """Parse plugin parameters.
 
         Args:

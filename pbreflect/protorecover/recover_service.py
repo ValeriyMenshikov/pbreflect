@@ -1,4 +1,3 @@
-import logging
 import socket
 from pathlib import Path
 from types import TracebackType
@@ -10,6 +9,7 @@ from typing import (
 import grpc
 from grpc import Channel, ChannelCredentials
 
+from pbreflect.log import get_logger
 from pbreflect.protorecover.proto_builder import ProtoFileBuilder
 from pbreflect.protorecover.reflection_client import GrpcReflectionClient
 
@@ -51,7 +51,7 @@ class RecoverService:
             private_key_path: Path to the private key file
             certificate_chain_path: Path to the certificate chain file
         """
-        self._logger = self._setup_logger()
+        self._logger = get_logger(__name__)
         self._channel: Channel = self._create_channel_safe(
             target=target,
             use_tls=use_tls,
@@ -67,20 +67,6 @@ class RecoverService:
         self._logger.info(f"Output directory set to: {self._output_dir}")
         if use_tls:
             self._logger.info("Using TLS/SSL for connection")
-
-    @staticmethod
-    def _setup_logger() -> logging.Logger:
-        """Configure and return a logger instance."""
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
-
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-
-        return logger
 
     @classmethod
     def _create_channel_safe(

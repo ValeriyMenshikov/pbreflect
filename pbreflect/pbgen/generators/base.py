@@ -1,9 +1,9 @@
 """Base implementation of code generator."""
 
-import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from pbreflect.log import get_logger
 from pbreflect.pbgen.errors import GenerationFailedError, NoProtoFilesError
 from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 from pbreflect.pbgen.utils.command import CommandExecutorImpl
@@ -33,11 +33,7 @@ class BaseGenerator:
         self.proto_finder = proto_finder
         self.command_executor = command_executor
         self.generator_factory = generator_factory
-
-        # Configure logging
-        logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s")
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger = get_logger(__name__)
 
     def generate(self, output_dir: str, generator_strategy: GeneratorStrategy) -> None:
         """Generate code using the specified generator strategy.
