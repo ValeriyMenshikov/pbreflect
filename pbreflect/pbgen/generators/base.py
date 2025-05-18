@@ -1,9 +1,9 @@
 """Base implementation of code generator."""
 
-import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from pbreflect.log import get_logger
 from pbreflect.pbgen.errors import GenerationFailedError, NoProtoFilesError
 from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 from pbreflect.pbgen.utils.command import CommandExecutorImpl
@@ -33,11 +33,7 @@ class BaseGenerator:
         self.proto_finder = proto_finder
         self.command_executor = command_executor
         self.generator_factory = generator_factory
-
-        # Configure logging
-        logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s")
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger = get_logger(__name__)
 
     def generate(self, output_dir: str, generator_strategy: GeneratorStrategy) -> None:
         """Generate code using the specified generator strategy.
@@ -64,15 +60,18 @@ class BaseGenerator:
         for proto_file in proto_files:
             self.logger.info(f"Generating code for proto: {proto_file}...")
 
-            # Format command with placeholders
-            command = generator_strategy.command_template.format(
-                include=self.proto_finder.proto_dir,
-                output=output_dir,
-                proto=proto_file,
-            )
+            # Format command arguments with placeholders
+            command_args = []
+            for arg_template in generator_strategy.command_template:
+                formatted_arg = arg_template.format(
+                    include=self.proto_finder.proto_dir,
+                    output=output_dir,
+                    proto=proto_file,
+                )
+                command_args.append(formatted_arg)
 
             # Execute command
-            exit_code, stderr = self.command_executor.execute(command)
+            exit_code, stderr = self.command_executor.execute(command_args)
             if exit_code != 0:
                 error_message = f"Failed to generate code for {proto_file}: {stderr}"
                 self.logger.error(error_message)

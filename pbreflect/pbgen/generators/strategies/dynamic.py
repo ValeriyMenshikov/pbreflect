@@ -15,10 +15,17 @@ class DynamicGeneratorStrategy(GeneratorStrategy):
         self.compiler = compiler
 
     @property
-    def command_template(self) -> str:
+    def command_template(self) -> list[str]:
         """Command template for this generator.
 
         Returns:
-            Command template string
+            Command template as a list of arguments
         """
-        return f"python -m grpc_tools.protoc --proto_path={{include}} --{self.compiler}_out={{output}} {{proto}}"
+        return [
+            "python",
+            "-m",
+            "grpc_tools.protoc",
+            "--proto_path={include}",
+            f"--{self.compiler}_out={{output}}",
+            "{proto}",
+        ]

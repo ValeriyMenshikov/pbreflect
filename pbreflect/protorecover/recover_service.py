@@ -1,4 +1,3 @@
-import logging
 import socket
 from pathlib import Path
 from types import TracebackType
@@ -10,11 +9,12 @@ from typing import (
 import grpc
 from grpc import Channel, ChannelCredentials
 
+from pbreflect.log import get_logger
 from pbreflect.protorecover.proto_builder import ProtoFileBuilder
 from pbreflect.protorecover.reflection_client import GrpcReflectionClient
 
 
-class ConnectionError(Exception):
+class RecoverServiceConnectionError(Exception):
     """Custom exception for connection-related errors."""
 
 
@@ -51,7 +51,7 @@ class RecoverService:
             private_key_path: Path to the private key file
             certificate_chain_path: Path to the certificate chain file
         """
-        self._logger = self._setup_logger()
+        self._logger = get_logger(__name__)
         self._channel: Channel = self._create_channel_safe(
             target=target,
             use_tls=use_tls,
@@ -67,20 +67,6 @@ class RecoverService:
         self._logger.info(f"Output directory set to: {self._output_dir}")
         if use_tls:
             self._logger.info("Using TLS/SSL for connection")
-
-    @staticmethod
-    def _setup_logger() -> logging.Logger:
-        """Configure and return a logger instance."""
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
-
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-
-        return logger
 
     @classmethod
     def _create_channel_safe(
@@ -124,7 +110,7 @@ class RecoverService:
                 )
             return cls._create_insecure_channel(target, timeout)
         except grpc.RpcError as e:
-            raise ConnectionError(f"Failed to establish channel to {target}: {e}") from e
+            raise RecoverServiceConnectionError(f"Failed to establish channel to {target}: {e}") from e
 
     @staticmethod
     def _parse_target(target: str) -> tuple[str, str]:
@@ -141,7 +127,7 @@ class RecoverService:
         try:
             socket.getaddrinfo(host, port)
         except socket.gaierror as e:
-            raise ConnectionError(f"DNS lookup failed for {host}:{port}: {e}") from e
+            raise RecoverServiceConnectionError(f"DNS lookup failed for {host}:{port}: {e}") from e
 
     @staticmethod
     def _create_secure_channel(
@@ -187,7 +173,7 @@ class RecoverService:
         except FileNotFoundError as e:
             raise e
         except Exception as e:
-            raise ConnectionError(f"Secure channel creation failed: {e}") from e
+            raise RecoverServiceConnectionError(f"Secure channel creation failed: {e}") from e
 
     @staticmethod
     def _create_insecure_channel(target: str, timeout: int) -> Channel:
@@ -197,7 +183,7 @@ class RecoverService:
             grpc.channel_ready_future(channel).result(timeout=timeout)
             return channel
         except Exception as e:
-            raise ConnectionError(f"Insecure channel creation failed: {e}") from e
+            raise RecoverServiceConnectionError(f"Insecure channel creation failed: {e}") from e
 
     def __enter__(self) -> "RecoverService":
         """Context manager entry point."""

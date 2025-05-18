@@ -16,7 +16,7 @@ class ProtoFileBuilder:
     def __init__(self) -> None:
         """Initialize the ProtoFileBuilder."""
         self.descriptor: descriptor_pb2.FileDescriptorProto | None = None
-        self.env = Environment(
+        self.env = Environment(  # noqa: S701
             loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
             trim_blocks=True,
             lstrip_blocks=True,

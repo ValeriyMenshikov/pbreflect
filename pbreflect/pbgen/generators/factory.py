@@ -1,5 +1,7 @@
 """Factory for creating generator strategies."""
 
+from typing import Any
+
 from pbreflect.pbgen.generators.protocols import GeneratorStrategy
 from pbreflect.pbgen.generators.strategies.betterproto import BetterProtoGeneratorStrategy
 from pbreflect.pbgen.generators.strategies.default import DefaultGeneratorStrategy
@@ -19,11 +21,12 @@ class GeneratorFactoryImpl:
             "pbreflect": PbReflectGeneratorStrategy,
         }
 
-    def create_generator(self, gen_type: str) -> GeneratorStrategy:
+    def create_generator(self, gen_type: str, **kwargs: Any) -> GeneratorStrategy:
         """Create a generator strategy based on the specified type.
 
         Args:
             gen_type: Type of generator to create
+            **kwargs: Additional parameters to pass to the generator strategy
 
         Returns:
             Generator strategy
@@ -32,7 +35,14 @@ class GeneratorFactoryImpl:
             ValueError: If the generator type is not supported
         """
         if gen_type in self.strategies:
-            return self.strategies[gen_type]()
+            strategy_class = self.strategies[gen_type]
+
+            # Handle special case for PbReflectGeneratorStrategy
+            if gen_type == "pbreflect":
+                async_mode = kwargs.get("async_mode", True)
+                return PbReflectGeneratorStrategy(async_mode=async_mode)
+
+            return strategy_class()
 
         dynamic_strategy = DynamicGeneratorStrategy(gen_type)
         assert isinstance(dynamic_strategy, GeneratorStrategy)

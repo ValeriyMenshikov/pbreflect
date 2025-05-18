@@ -1,9 +1,10 @@
-import re
 from typing import final
 
 import grpc
 from google.protobuf import descriptor_pb2
 from grpc_reflection.v1alpha import reflection_pb2, reflection_pb2_grpc
+
+from pbreflect.utils import name_to_snake
 
 
 @final
@@ -141,23 +142,6 @@ class GrpcReflectionClient:
 
     # Дополнительные методы для работы с дескрипторами
 
-    def _camel_to_snake(self, name: str) -> str:
-        """Convert camelCase to snake_case.
-
-        Args:
-            name: Name in camelCase
-
-        Returns:
-            Name in snake_case
-        """
-        # Если имя начинается с заглавной буквы, приводим к нижнему регистру
-        if name and name[0].isupper():
-            name = name[0].lower() + name[1:]
-
-        # Добавляем underscore перед каждой заглавной буквой и приводим к нижнему регистру
-        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-
     def get_service_methods(self, service: descriptor_pb2.ServiceDescriptorProto) -> list[dict]:
         """Get methods from a service descriptor.
 
@@ -183,7 +167,7 @@ class GrpcReflectionClient:
 
             methods.append(
                 {
-                    "name": self._camel_to_snake(method.name),
+                    "name": name_to_snake(method.name),
                     "original_name": method.name,
                     "input_type": input_type,
                     "output_type": output_type,
@@ -215,7 +199,7 @@ class GrpcReflectionClient:
         if len(components) >= 3 and components[0] == "google" and components[1] == "protobuf":
             # Формируем имя модуля на основе последнего компонента (имени типа)
             # Например, для 'google.protobuf.Empty' -> 'empty_pb2.Empty'
-            module_name = self._camel_to_snake(type_name).lower() + "_pb2"
+            module_name = name_to_snake(type_name).lower() + "_pb2"
             return f"{module_name}.{type_name}"
 
         # Для других типов возвращаем короткое имя для обратной совместимости
@@ -281,10 +265,8 @@ class GrpcReflectionClient:
         """
         nested_types = []
 
-        # Формируем префикс для вложенных типов
         type_prefix = f"{prefix}.{message.name}" if prefix else message.name
 
-        # Обрабатываем вложенные сообщения
         for nested_message in message.nested_type:
             fields = self.get_message_fields(nested_message)
             nested_types.append(
@@ -316,10 +298,8 @@ class GrpcReflectionClient:
         """
         nested_enums = []
 
-        # Формируем префикс для вложенных типов
         type_prefix = f"{prefix}.{message.name}" if prefix else message.name
 
-        # Обрабатываем вложенные перечисления
         for nested_enum in message.enum_type:
             values = self.get_enum_values(nested_enum)
             nested_enums.append(
@@ -336,7 +316,8 @@ class GrpcReflectionClient:
 
         return nested_enums
 
-    def get_package_name(self, proto_file: descriptor_pb2.FileDescriptorProto) -> str:
+    @staticmethod
+    def get_package_name(proto_file: descriptor_pb2.FileDescriptorProto) -> str:
         """Get package name from proto file.
 
         Args:
@@ -347,7 +328,8 @@ class GrpcReflectionClient:
         """
         return proto_file.package
 
-    def get_imports(self, proto_file: descriptor_pb2.FileDescriptorProto) -> list[str]:
+    @staticmethod
+    def get_imports(proto_file: descriptor_pb2.FileDescriptorProto) -> list[str]:
         """Get imports for the given proto file.
 
         Args:
@@ -358,10 +340,7 @@ class GrpcReflectionClient:
         """
         imports = []
 
-        # Импортируем классы из основного файла pb2
-        # Формируем полный путь к файлу для импорта
         file_path = proto_file.name.replace(".proto", "_pb2")
-        # Если имя файла не содержит путь, то используем просто имя файла
         if "/" not in proto_file.name:
             import_path = f"{file_path}"
         else:
@@ -462,7 +441,8 @@ class GrpcReflectionClient:
 
         return enums
 
-    def get_output_filename(self, proto_file: descriptor_pb2.FileDescriptorProto, suffix: str = "_pb2_o3.py") -> str:
+    @staticmethod
+    def get_output_filename(proto_file: descriptor_pb2.FileDescriptorProto, suffix: str = "_pb2_pbreflect.py") -> str:
         """Get output filename for the given proto file.
 
         Args:
