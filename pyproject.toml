@@ -55,8 +55,33 @@ line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "I", "N", "UP", "ANN", "C4", "SIM", "ARG"]
-ignore = []
+select = ["N", "B", "A", "E", "W", "F", "ASYNC", "S", "D", "I"]
+ignore = [
+  "PT001",
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D107",
+  "D104",
+  "W293",
+  "S101",
+  "D212",
+  "D200",
+  "UP007",
+  "S105",
+  "S311",
+  "S106",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = ["id"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["pbreflect"]

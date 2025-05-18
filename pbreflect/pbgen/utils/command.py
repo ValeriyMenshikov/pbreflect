@@ -6,7 +6,8 @@ from subprocess import PIPE, Popen
 class CommandExecutorImpl:
     """Implementation of command executor."""
 
-    def execute(self, command: str) -> tuple[int, str]:
+    @staticmethod
+    def execute(command: str) -> tuple[int, str]:
         """Execute a shell command.
 
         Args:

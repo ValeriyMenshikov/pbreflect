@@ -26,6 +26,7 @@ def run(
     gen_type: Literal["default", "mypy", "betterproto", "pbreflect"],
     refresh: bool = False,
     root_path: Path | None = None,
+    async_mode: bool = True,
 ) -> None:
     """Run code generation for proto files.
 
@@ -46,6 +47,7 @@ def run(
             - "pbreflect": Custom generator with enhanced gRPC client support
         refresh: If True, clears the output directory before generation
         root_path: Root project directory, defaults to current working directory
+        async_mode: Whether to generate async client code (True) or sync client code (False)
     """
     if refresh and os.path.exists(output_dir):
         shutil.rmtree(output_dir)
@@ -66,7 +68,10 @@ def run(
     command_executor = CommandExecutorImpl()
     generator_factory = GeneratorFactoryImpl()
 
-    generator_strategy = generator_factory.create_generator(gen_type)
+    generator_strategy = generator_factory.create_generator(
+        gen_type,
+        async_mode=async_mode,
+    )
 
     from pbreflect.pbgen.generators.base import BaseGenerator
 

@@ -103,7 +103,20 @@ def get_protos(
     help="Type of generator",
 )
 @click.option("-r", "--refresh", "refresh", required=False, is_flag=True, help="Clear output directory")
-def gen(proto_dir: str, output_dir: str, gen_type: str = "default", refresh: bool = False) -> None:
+@click.option(
+    "--async-mode",
+    "async_mode",
+    type=click.Choice(["true", "false"]),
+    default="true",
+    help="Generate async (true) or sync (false) client code (only for pbreflect generator)",
+)
+def gen(
+    proto_dir: str,
+    output_dir: str,
+    gen_type: str = "default",
+    refresh: bool = False,
+    async_mode: str = "true",
+) -> None:
     """Command to generate code
 
     Args:
@@ -111,10 +124,16 @@ def gen(proto_dir: str, output_dir: str, gen_type: str = "default", refresh: boo
         output_dir: Directory where to generate code
         gen_type: Type of generator
         refresh: Clear output directory
+        async_mode: Generate async (true) or sync (false) client code (only for pbreflect generator)
     """
-
     gen_type_literal = cast(Literal["default", "mypy", "betterproto", "pbreflect"], gen_type)
-    run(proto_dir, output_dir, gen_type_literal, refresh)
+    run(
+        proto_dir,
+        output_dir,
+        gen_type_literal,
+        refresh,
+        async_mode=async_mode.lower() == "true",
+    )
 
 
 cli.add_command(get_protos)

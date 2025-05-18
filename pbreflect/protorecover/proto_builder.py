@@ -20,6 +20,7 @@ class ProtoFileBuilder:
             loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
             trim_blocks=True,
             lstrip_blocks=True,
+            autoescape=True,
         )
 
     def get_proto(self, descriptor: descriptor_pb2.FileDescriptorProto) -> tuple[str, str]:

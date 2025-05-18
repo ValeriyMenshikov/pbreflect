@@ -14,7 +14,7 @@ from pbreflect.protorecover.proto_builder import ProtoFileBuilder
 from pbreflect.protorecover.reflection_client import GrpcReflectionClient
 
 
-class ConnectionError(Exception):
+class RecoverServiceConnectionError(Exception):
     """Custom exception for connection-related errors."""
 
 
@@ -124,7 +124,7 @@ class RecoverService:
                 )
             return cls._create_insecure_channel(target, timeout)
         except grpc.RpcError as e:
-            raise ConnectionError(f"Failed to establish channel to {target}: {e}") from e
+            raise RecoverServiceConnectionError(f"Failed to establish channel to {target}: {e}") from e
 
     @staticmethod
     def _parse_target(target: str) -> tuple[str, str]:
@@ -141,7 +141,7 @@ class RecoverService:
         try:
             socket.getaddrinfo(host, port)
         except socket.gaierror as e:
-            raise ConnectionError(f"DNS lookup failed for {host}:{port}: {e}") from e
+            raise RecoverServiceConnectionError(f"DNS lookup failed for {host}:{port}: {e}") from e
 
     @staticmethod
     def _create_secure_channel(
@@ -187,7 +187,7 @@ class RecoverService:
         except FileNotFoundError as e:
             raise e
         except Exception as e:
-            raise ConnectionError(f"Secure channel creation failed: {e}") from e
+            raise RecoverServiceConnectionError(f"Secure channel creation failed: {e}") from e
 
     @staticmethod
     def _create_insecure_channel(target: str, timeout: int) -> Channel:
@@ -197,7 +197,7 @@ class RecoverService:
             grpc.channel_ready_future(channel).result(timeout=timeout)
             return channel
         except Exception as e:
-            raise ConnectionError(f"Insecure channel creation failed: {e}") from e
+            raise RecoverServiceConnectionError(f"Insecure channel creation failed: {e}") from e
 
     def __enter__(self) -> "RecoverService":
         """Context manager entry point."""
