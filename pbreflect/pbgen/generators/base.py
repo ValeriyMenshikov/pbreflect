@@ -64,15 +64,18 @@ class BaseGenerator:
         for proto_file in proto_files:
             self.logger.info(f"Generating code for proto: {proto_file}...")
 
-            # Format command with placeholders
-            command = generator_strategy.command_template.format(
-                include=self.proto_finder.proto_dir,
-                output=output_dir,
-                proto=proto_file,
-            )
+            # Format command arguments with placeholders
+            command_args = []
+            for arg_template in generator_strategy.command_template:
+                formatted_arg = arg_template.format(
+                    include=self.proto_finder.proto_dir,
+                    output=output_dir,
+                    proto=proto_file,
+                )
+                command_args.append(formatted_arg)
 
             # Execute command
-            exit_code, stderr = self.command_executor.execute(command)
+            exit_code, stderr = self.command_executor.execute(command_args)
             if exit_code != 0:
                 error_message = f"Failed to generate code for {proto_file}: {stderr}"
                 self.logger.error(error_message)

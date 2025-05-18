@@ -117,7 +117,7 @@ def gen(
     refresh: bool = False,
     async_mode: str = "true",
 ) -> None:
-    """Command to generate code
+    """Command to generate code.
 
     Args:
         proto_dir: Directory with proto files

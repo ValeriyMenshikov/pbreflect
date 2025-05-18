@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import jinja2
 from google.protobuf import descriptor_pb2
@@ -47,6 +47,7 @@ class PbReflectPlugin:
             loader=jinja2.FileSystemLoader(template_path),
             trim_blocks=True,
             lstrip_blocks=True,
+            autoescape=True,
         )
         return env.get_template(template_name)
 
@@ -84,7 +85,7 @@ class PbReflectPlugin:
         Returns:
             Dictionary of parsed parameters
         """
-        parameters = {}
+        parameters: dict[str, Any] = {}
         if not parameter_string:
             return parameters
 

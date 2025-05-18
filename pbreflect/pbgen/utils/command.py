@@ -1,32 +1,35 @@
 """Utilities for executing shell commands."""
 
-from subprocess import PIPE, Popen
+from subprocess import CompletedProcess, run
 
 
 class CommandExecutorImpl:
     """Implementation of command executor."""
 
     @staticmethod
-    def execute(command: str) -> tuple[int, str]:
-        """Execute a shell command.
+    def execute(command: list[str]) -> tuple[int, str]:
+        """Execute a command.
 
         Args:
-            command: Command to execute
+            command: Command arguments as a list
 
         Returns:
             Tuple containing exit code and error output
         """
-        process = Popen(command, shell=True, stderr=PIPE)
-        process.wait()
+        result: CompletedProcess = run(
+            args=command,
+            capture_output=True,
+            text=False,
+            check=False,
+        )
 
         # Handle potential encoding issues
-        if process.stderr is not None:
+        if result.stderr:
             try:
-                stderr = process.stderr.read().decode("utf-8")
+                stderr = result.stderr.decode("utf-8")
             except UnicodeDecodeError:
-                stderr = process.stderr.read().decode("windows-1251")
+                stderr = result.stderr.decode("windows-1251")
         else:
             stderr = ""
 
-        process.communicate()
-        return process.returncode, stderr
+        return result.returncode, stderr

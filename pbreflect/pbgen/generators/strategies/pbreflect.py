@@ -15,11 +15,11 @@ class PbReflectGeneratorStrategy(GeneratorStrategy):
         self.async_mode = async_mode
 
     @property
-    def command_template(self) -> str:
+    def command_template(self) -> list[str]:
         """Get the command template for code generation.
 
         Returns:
-            Command template string
+            Command template as a list of arguments
         """
         plugin_options = []
 
@@ -29,11 +29,13 @@ class PbReflectGeneratorStrategy(GeneratorStrategy):
         plugin_params = ",".join(plugin_options)
         plugin_out = f"--pbreflect_out={plugin_params}:" + "{output}" if plugin_params else "--pbreflect_out={output}"
 
-        return (
-            "python -m grpc_tools.protoc "
-            "--proto_path={include} "
-            "--python_out={output} "
-            "--mypy_out=readable_stubs,quiet:{output} "
-            f"{plugin_out} "
-            "{proto}"
-        )
+        return [
+            "python",
+            "-m",
+            "grpc_tools.protoc",
+            "--proto_path={include}",
+            "--python_out={output}",
+            "--mypy_out=readable_stubs,quiet:{output}",
+            plugin_out,
+            "{proto}",
+        ]
