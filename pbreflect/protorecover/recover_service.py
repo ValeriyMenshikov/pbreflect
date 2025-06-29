@@ -227,7 +227,7 @@ class RecoverService:
             for name, descriptor in descriptors.items():
                 name, proto_content = self._proto_builder.get_proto(descriptor)
 
-                output_path = self._output_dir / name
+                output_path = self._output_dir / name.replace('-', '_')
                 output_path.parent.mkdir(parents=True, exist_ok=True)
 
                 with open(output_path, "w") as f:
