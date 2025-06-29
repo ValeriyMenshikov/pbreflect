@@ -10,6 +10,7 @@ import shutil
 from pathlib import Path
 from typing import Literal
 
+from pbreflect.pbgen.generators.base import BaseGenerator
 from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
 from pbreflect.pbgen.patchers.directory_structure_patcher import DirectoryStructurePatcher
 from pbreflect.pbgen.patchers.import_patcher import ImportPatcher
@@ -19,7 +20,6 @@ from pbreflect.pbgen.patchers.pb_reflect_patcher import PbReflectPatcher
 from pbreflect.pbgen.patchers.proto_import_patcher import ProtoImportPatcher
 from pbreflect.pbgen.utils.command import CommandExecutorImpl
 from pbreflect.pbgen.utils.file_finder import ProtoFileFinderImpl
-from pbreflect.pbgen.generators.base import BaseGenerator
 
 
 def run(

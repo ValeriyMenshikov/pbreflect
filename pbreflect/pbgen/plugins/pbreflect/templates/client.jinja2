@@ -93,24 +93,6 @@ class {{ service.name }}Client:
         metadata: {% if async_mode %}Optional[grpc.aio.Metadata]{% else %}Optional[List[Tuple[str, str]]]{% endif %} = None,
         timeout: Optional[float] = None,
     ){% if async_mode %}{% if method.is_client_streaming and method.is_server_streaming %} -> grpc.aio.StreamStreamCall[{{ method.input_type }}, {{ method.output_type }}]{% elif method.is_client_streaming %} -> grpc.aio.StreamUnaryCall[{{ method.input_type }}, {{ method.output_type }}]{% elif method.is_server_streaming %} -> grpc.aio.UnaryStreamCall[{{ method.input_type }}, {{ method.output_type }}]{% else %} -> {{ method.output_type }}{% endif %}{% else %}{% if method.is_server_streaming %} -> Iterable[{{ method.output_type }}]{% else %} -> {{ method.output_type }}{% endif %}{% endif %}:
-        """Call {{ method.original_name }} method.
-
-        Args:
-            {% if method.is_client_streaming %}
-            request_iterator: Iterator of request messages
-            {% else %}
-            request: Request message
-            {% endif %}
-            metadata: Optional metadata
-            timeout: Optional timeout
-
-        Returns:
-            {% if async_mode %}
-            {% if method.is_client_streaming or method.is_server_streaming %}gRPC call object{% else %}Response message{% endif %}
-            {% else %}
-            {% if method.is_server_streaming %}Iterator of response messages{% else %}Response message{% endif %}
-            {% endif %}
-        """
         call = self._stub.{{ method.original_name }}(
             {% if method.is_client_streaming %}
             request_iterator,

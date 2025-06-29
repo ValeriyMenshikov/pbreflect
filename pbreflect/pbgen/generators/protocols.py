@@ -14,4 +14,3 @@ class GeneratorStrategy(Protocol):
         Returns:
             Command template as a list of arguments
         """
-        ...

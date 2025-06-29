@@ -347,7 +347,7 @@ class GrpcReflectionClient:
         # Собираем имена всех сообщений для импорта
         message_names = [message.name for message in proto_file.message_type]
         if message_names:
-            imports.append(f"from {import_path} import {', '.join(message_names)}")
+            imports.append(f"from {import_path} import {', '.join(message_names)}".replace("-", "_"))
 
         # Add imports for dependencies
         dependency_modules = set()
