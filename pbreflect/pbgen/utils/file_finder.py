@@ -14,7 +14,7 @@ class ProtoFileFinderImpl:
             exclude_patterns: List of patterns to exclude from search results
         """
         self.proto_dir = proto_dir
-        self.exclude_patterns = exclude_patterns or ["google/", "reflection.proto"]
+        self.exclude_patterns = exclude_patterns or ["google/", "reflection.proto", "grpc/"]
 
     def find_proto_files(self) -> list[str]:
         """Find all proto files in the proto directory.

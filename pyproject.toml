@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pbreflect"
-version = "1.0.0"
+version = "1.0.1"
 description = "A tool for recovering Protocol Buffer definitions from gRPC services using reflection API and generating client code"
 authors = ["Menshikov Valeriy Sergeevich <vmenshikov@ozon.ru>"]
 readme = "README.md"
@@ -26,21 +26,24 @@ protoc-gen-pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-jinja2 = "^3.1.6"
-grpcio-reflection = "^1.71.0"
-pydantic = "^2.11.3"
-grpcio-tools = "^1.71.0"
-click = "^8.1.8"
+python = ">=3.11, <4.0"
+jinja2 = ">=3.1.6"
+grpcio-reflection = ">=1.71.0"
+pydantic = ">=2.11.3"
+grpcio-tools = ">=1.71.0"
+click = ">=8.1.8"
 mypy-protobuf = ">=3.6.0"
-grpcio = "^1.71.0"
-betterproto = "v2.0.0-beta7"
-grpc-stubs = "^1.53.0.6"
-protobuf = "^5.0.0"
-types-protobuf = "^4.24.0.20240311"
-pydantic-settings = "^2.9.1"
-loguru = "^0.7.3"
-ruff = "^0.11.7"
+grpcio = ">=1.71.0"
+grpc-stubs = ">=1.53.0.6"
+protobuf = ">=5.0.0"
+types-protobuf = ">=4.24.0.20240311"
+pydantic-settings = ">=2.9.1"
+loguru = ">=0.7.3"
+ruff = ">=0.11.7"
+betterproto = { version = "v2.0.0-beta7", optional = true }
+
+[tool.poetry.extras]
+betterproto = ["betterproto"]
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.15.0"
