@@ -13,6 +13,8 @@ PBReflect is a powerful tool for recovering Protocol Buffer (protobuf) definitio
 - **Dependency Resolution**: Correctly handles dependencies between proto files
 - **Simple CLI**: Easy-to-use command-line interface
 - **Client Generation**: Generate Python client libraries from `.proto` files with multiple generator strategies
+- **Custom Templates**: Support for custom code generation templates
+- **All-in-One Command**: Generate client code directly from a gRPC server in a single step
 
 ## Installation
 
@@ -77,6 +79,39 @@ Example:
 pbreflect generate --proto-dir ./protos --output-dir ./generated --gen-type betterproto
 ```
 
+### Custom Templates
+
+For the `pbreflect` generator strategy, you can specify a custom templates directory:
+
+```bash
+# Generate code using custom templates
+pbreflect generate --proto-dir ./protos --output-dir ./generated --gen-type pbreflect --template-dir ./my-templates
+```
+
+This allows you to customize the generated code according to your needs.
+
+## Direct Client Generation from Server
+
+PBReflect provides an all-in-one command to generate client code directly from a gRPC server:
+
+```bash
+# Generate client code directly from a gRPC server
+pbreflect reflect -h localhost:50051 -o ./clients
+```
+
+This command:
+1. Connects to the gRPC server
+2. Retrieves proto definitions using reflection
+3. Generates client code in one step
+4. Automatically cleans up temporary proto files
+
+You can customize the generation with the same options as the `generate` command:
+
+```bash
+# Generate custom client code directly from a server
+pbreflect reflect -h localhost:50051 -o ./clients --gen-type betterproto --template-dir ./my-templates
+```
+
 ## CLI Commands
 
 PBReflect provides a comprehensive CLI interface:
@@ -84,6 +119,7 @@ PBReflect provides a comprehensive CLI interface:
 ```
 pbreflect get-protos  # Recover proto files from a running gRPC server
 pbreflect generate    # Generate client code from proto files
+pbreflect reflect     # Generate client code directly from a gRPC server (all-in-one)
 pbreflect info        # Display information about available services
 ```
 
@@ -99,7 +135,7 @@ from pbreflect.protorecover.recover_service import RecoverService
 
 # Basic usage
 with RecoverService("localhost:50051", Path("./protos")) as service:
-    service.recover_protos()
+    service.recover_proto_files()
 
 # With TLS
 with RecoverService(
@@ -110,7 +146,7 @@ with RecoverService(
     private_key_path=Path("./certs/client.key"),
     certificate_chain_path=Path("./certs/client.pem")
 ) as service:
-    service.recover_protos()
+    service.recover_proto_files()
 ```
 
 ## Use Cases
