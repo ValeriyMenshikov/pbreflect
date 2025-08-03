@@ -14,6 +14,7 @@ from pbreflect.pbgen.generators.base import BaseGenerator
 from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
 from pbreflect.pbgen.patchers.directory_structure_patcher import DirectoryStructurePatcher
 from pbreflect.pbgen.patchers.import_patcher import ImportPatcher
+from pbreflect.pbgen.patchers.init_file_patcher import InitFilePatcher
 from pbreflect.pbgen.patchers.mypy_patcher import MypyPatcher
 from pbreflect.pbgen.patchers.patcher_protocol import CodePatcher
 from pbreflect.pbgen.patchers.pb_reflect_patcher import PbReflectPatcher
@@ -87,6 +88,7 @@ def run(
         ImportPatcher(output_dir, root_path),
         MypyPatcher(output_dir),
         PbReflectPatcher(output_dir),
+        InitFilePatcher(output_dir),
     ]
 
     # Apply all patchers
