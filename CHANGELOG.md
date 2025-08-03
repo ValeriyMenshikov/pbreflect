@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Improved error handling in code generation process
 - Updated README.md with comprehensive examples for new commands and options
+- Modernized type annotations in templates using Python 3.11+ syntax (e.g., `list[tuple[str, str]] | None` instead of `Optional[List[Tuple[str, str]]]`)
 
 ## [0.1.1] - 2025-05-17
 
