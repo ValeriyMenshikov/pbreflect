@@ -110,12 +110,19 @@ def get_protos(
     default="false",
     help="Generate async (true) or sync (false) client code (only for pbreflect generator)",
 )
+@click.option(
+    "--template-dir",
+    "template_dir",
+    required=False,
+    help="Custom directory with templates (only for pbreflect generator)",
+)
 def gen(
     proto_dir: str,
     output_dir: str,
-    gen_type: str = "default",
+    gen_type: str = "pbreflect",
     refresh: bool = False,
-    async_mode: str = "true",
+    async_mode: str = "false",
+    template_dir: str | None = None,
 ) -> None:
     """Command to generate code.
 
@@ -125,6 +132,7 @@ def gen(
         gen_type: Type of generator
         refresh: Clear output directory
         async_mode: Generate async (true) or sync (false) client code (only for pbreflect generator)
+        template_dir: Custom directory with templates (only for pbreflect generator)
     """
     gen_type_literal = cast(Literal["default", "mypy", "betterproto", "pbreflect"], gen_type)
     run(
@@ -133,6 +141,7 @@ def gen(
         gen_type_literal,
         refresh,
         async_mode=async_mode.lower() == "true",
+        template_dir=template_dir,
     )
 
 

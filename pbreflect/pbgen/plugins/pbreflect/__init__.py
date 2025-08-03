@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import jinja2
 from google.protobuf import descriptor_pb2
@@ -14,20 +14,28 @@ from pbreflect.protorecover.reflection_client import GrpcReflectionClient
 class PbReflectPlugin:
     """Plugin for generating PbReflect client code."""
 
-    def __init__(self) -> None:
-        """Initialize the plugin."""
+    def __init__(self, template_dir: Optional[str] = None) -> None:
+        """Initialize the plugin.
+        
+        Args:
+            template_dir: Optional path to custom templates directory
+        """
         # Create client for working with descriptors
         # For the plugin, we don't need a real channel as we work with descriptors directly
         self.descriptor_client = GrpcReflectionClient(channel=None)
+        self.template_dir = template_dir
 
-    @staticmethod
-    def get_template_path() -> Path:
+    def get_template_path(self) -> Path:
         """Get path to templates directory.
 
         Returns:
             Path to templates directory
         """
-        # Determine the path to the templates directory
+        # Use custom template directory if provided
+        if self.template_dir:
+            return Path(self.template_dir)
+            
+        # Otherwise use default templates directory
         current_dir = Path(__file__).parent
         template_dir = current_dir / "templates"
         return template_dir
@@ -143,8 +151,14 @@ def main() -> None:
     request = plugin.CodeGeneratorRequest()
     request.ParseFromString(data)
 
+    # Parse parameters
+    parameters = PbReflectPlugin.parse_parameters(request.parameter)
+    
+    # Get template directory from parameters if provided
+    template_dir = parameters.get("t", None)
+    
     # Process request
-    plugin_instance = PbReflectPlugin()
+    plugin_instance = PbReflectPlugin(template_dir=template_dir)
     response = plugin_instance.process_request(request)
 
     # Write response to stdout

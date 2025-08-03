@@ -40,7 +40,8 @@ class GeneratorFactoryImpl:
             # Handle special case for PbReflectGeneratorStrategy
             if gen_type == "pbreflect":
                 async_mode = kwargs.get("async_mode", True)
-                return PbReflectGeneratorStrategy(async_mode=async_mode)
+                template_dir = kwargs.get("template_dir")
+                return PbReflectGeneratorStrategy(async_mode=async_mode, template_dir=template_dir)
 
             return strategy_class()
 
