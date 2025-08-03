@@ -11,13 +11,13 @@ import grpc
 {% if async_mode %}
 import grpc.aio
 {% endif %}
-from typing import Dict, List, Optional, Union, Any, Callable, ClassVar, Type, cast, Iterator, Tuple, Iterable
+from typing import Dict, List, Union, Any, Callable, ClassVar, Type, cast, Iterator, Tuple, Iterable
 from google.protobuf.message import Message
 from abc import ABC
 
 {# Import all required modules, skipping duplicates #}
 {% for import_line in imports %}
-{% if import_line.startswith("import grpc") or import_line.startswith("from typing") or import_line.startswith("from google.protobuf.message") or import_line.startswith("from nuke.grpc_client") or import_line.startswith("from abc") %}
+{% if import_line.startswith("import grpc") or import_line.startswith("from typing") or import_line.startswith("from google.protobuf.message") or import_line.startswith("from abc") %}
 {% else %}
 {{ import_line }}
 {% endif %}
@@ -90,8 +90,8 @@ class {{ service.name }}Client:
         {% else %}
         request: {{ method.input_type }},
         {% endif %}
-        metadata: {% if async_mode %}Optional[grpc.aio.Metadata]{% else %}Optional[List[Tuple[str, str]]]{% endif %} = None,
-        timeout: Optional[float] = None,
+        metadata: {% if async_mode %}grpc.aio.Metadata | None{% else %}list[tuple[str, str]] | None{% endif %} = None,
+        timeout: float | None = None,
     ){% if async_mode %}{% if method.is_client_streaming and method.is_server_streaming %} -> grpc.aio.StreamStreamCall[{{ method.input_type }}, {{ method.output_type }}]{% elif method.is_client_streaming %} -> grpc.aio.StreamUnaryCall[{{ method.input_type }}, {{ method.output_type }}]{% elif method.is_server_streaming %} -> grpc.aio.UnaryStreamCall[{{ method.input_type }}, {{ method.output_type }}]{% else %} -> {{ method.output_type }}{% endif %}{% else %}{% if method.is_server_streaming %} -> Iterable[{{ method.output_type }}]{% else %} -> {{ method.output_type }}{% endif %}{% endif %}:
         call = self._stub.{{ method.original_name }}(
             {% if method.is_client_streaming %}

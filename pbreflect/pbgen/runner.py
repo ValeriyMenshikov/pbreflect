@@ -14,6 +14,7 @@ from pbreflect.pbgen.generators.base import BaseGenerator
 from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
 from pbreflect.pbgen.patchers.directory_structure_patcher import DirectoryStructurePatcher
 from pbreflect.pbgen.patchers.import_patcher import ImportPatcher
+from pbreflect.pbgen.patchers.init_file_patcher import InitFilePatcher
 from pbreflect.pbgen.patchers.mypy_patcher import MypyPatcher
 from pbreflect.pbgen.patchers.patcher_protocol import CodePatcher
 from pbreflect.pbgen.patchers.pb_reflect_patcher import PbReflectPatcher
@@ -29,6 +30,7 @@ def run(
     refresh: bool = False,
     root_path: Path | None = None,
     async_mode: bool = True,
+    template_dir: str | None = None,
 ) -> None:
     """Run code generation for proto files.
 
@@ -50,6 +52,7 @@ def run(
         refresh: If True, clears the output directory before generation
         root_path: Root project directory, defaults to current working directory
         async_mode: Whether to generate async client code (True) or sync client code (False)
+        template_dir: Custom directory with templates (only for pbreflect generator)
     """
     if refresh and os.path.exists(output_dir):
         shutil.rmtree(output_dir)
@@ -73,6 +76,7 @@ def run(
     generator_strategy = generator_factory.create_generator(
         gen_type,
         async_mode=async_mode,
+        template_dir=template_dir,
     )
 
     generator = BaseGenerator(proto_finder, command_executor, generator_factory)
@@ -84,6 +88,7 @@ def run(
         ImportPatcher(output_dir, root_path),
         MypyPatcher(output_dir),
         PbReflectPatcher(output_dir),
+        InitFilePatcher(output_dir),
     ]
 
     # Apply all patchers

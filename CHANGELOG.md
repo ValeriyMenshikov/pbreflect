@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-08-03
+
+### Added
+- New `reflect` command for generating client code directly from a gRPC server in one step
+- Support for custom templates via `--template-dir` option in both `generate` and `reflect` commands
+- Automatic creation of `__init__.py` files in all generated code directories for proper Python package structure
+- Updated documentation with examples for new features
+
+### Changed
+- Improved error handling in code generation process
+- Updated README.md with comprehensive examples for new commands and options
+- Modernized type annotations in templates using Python 3.11+ syntax (e.g., `list[tuple[str, str]] | None` instead of `Optional[List[Tuple[str, str]]]`)
+
 ## [0.1.1] - 2025-05-17
 
 ### Added

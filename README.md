@@ -1,7 +1,11 @@
 # PBReflect
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11%2B-brightgreen)
+[![PyPI version](https://img.shields.io/pypi/v/pbreflect.svg)](https://pypi.org/project/pbreflect)
+[![Python versions](https://img.shields.io/pypi/pyversions/pbreflect.svg)](https://pypi.python.org/pypi/pbreflect)
+[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/ValeriyMenshikov/pbreflect/python-test.yml?branch=main)](https://github.com/ValeriyMenshikov/pbreflect/actions/workflows/python-test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ValeriyMenshikov/pbreflect/blob/main/LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/pbreflect.svg)](https://pypistats.org/packages/pbreflect)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 PBReflect is a powerful tool for recovering Protocol Buffer (protobuf) definitions from gRPC services using the reflection API. It allows developers to generate `.proto` files from running gRPC servers without having access to the original source code.
 
@@ -13,6 +17,8 @@ PBReflect is a powerful tool for recovering Protocol Buffer (protobuf) definitio
 - **Dependency Resolution**: Correctly handles dependencies between proto files
 - **Simple CLI**: Easy-to-use command-line interface
 - **Client Generation**: Generate Python client libraries from `.proto` files with multiple generator strategies
+- **Custom Templates**: Support for custom code generation templates
+- **All-in-One Command**: Generate client code directly from a gRPC server in a single step
 
 ## Installation
 
@@ -26,9 +32,41 @@ poetry add pbreflect
 
 ## Quick Start
 
-### Basic Usage
+### Direct Client Generation from Server
 
-To recover proto files from a gRPC server:
+PBReflect provides an all-in-one command to generate client code directly from a gRPC server:
+
+```bash
+# Generate client code directly from a gRPC server
+pbreflect reflect -h localhost:50051 -o ./clients
+```
+
+This command:
+1. Connects to the gRPC server
+2. Retrieves proto definitions using reflection
+3. Generates client code in one step
+4. Automatically cleans up temporary proto files
+
+You can customize the generation with various options:
+
+```bash
+# Generate custom client code directly from a server
+pbreflect reflect -h localhost:50051 -o ./clients --gen-type pbreflect --template-dir ./my-templates
+```
+
+For secure connections, you can use TLS certificates:
+
+```bash
+# With TLS support
+pbreflect reflect -h secure.example.com:443 -o ./clients \
+  --root-cert ./certs/ca.pem \
+  --private-key ./certs/client.key \
+  --cert-chain ./certs/client.pem
+```
+
+### Recovering Proto Files Only
+
+If you only need to recover proto files from a gRPC server:
 
 ```bash
 # Basic usage
@@ -37,7 +75,7 @@ pbreflect get-protos -h localhost:50051 -o ./protos
 
 This will connect to the gRPC server at `localhost:50051`, retrieve all available proto definitions, and save them to the `./protos` directory.
 
-### Using TLS/SSL
+#### Using TLS/SSL
 
 For secure connections, you can use TLS certificates:
 
@@ -52,16 +90,16 @@ pbreflect get-protos -h secure.example.com:443 -o ./protos \
   --cert-chain ./certs/client.pem
 ```
 
-## Client Code Generation
+### Client Code Generation from Proto Files
 
-PBReflect can generate client code from proto files:
+If you already have proto files and want to generate client code:
 
 ```bash
 # Generate client code from proto files
 pbreflect generate --proto-dir ./protos --output-dir ./generated --gen-type pbreflect
 ```
 
-### Generator Strategies
+#### Generator Strategies
 
 PBReflect supports multiple code generation strategies:
 
@@ -77,11 +115,23 @@ Example:
 pbreflect generate --proto-dir ./protos --output-dir ./generated --gen-type betterproto
 ```
 
+#### Custom Templates
+
+For the `pbreflect` generator strategy, you can specify a custom templates directory:
+
+```bash
+# Generate code using custom templates
+pbreflect generate --proto-dir ./protos --output-dir ./generated --gen-type pbreflect --template-dir ./my-templates
+```
+
+This allows you to customize the generated code according to your needs.
+
 ## CLI Commands
 
 PBReflect provides a comprehensive CLI interface:
 
 ```
+pbreflect reflect     # Generate client code directly from a gRPC server (all-in-one)
 pbreflect get-protos  # Recover proto files from a running gRPC server
 pbreflect generate    # Generate client code from proto files
 pbreflect info        # Display information about available services
@@ -99,7 +149,7 @@ from pbreflect.protorecover.recover_service import RecoverService
 
 # Basic usage
 with RecoverService("localhost:50051", Path("./protos")) as service:
-    service.recover_protos()
+    service.recover_proto_files()
 
 # With TLS
 with RecoverService(
@@ -110,7 +160,7 @@ with RecoverService(
     private_key_path=Path("./certs/client.key"),
     certificate_chain_path=Path("./certs/client.pem")
 ) as service:
-    service.recover_protos()
+    service.recover_proto_files()
 ```
 
 ## Use Cases
