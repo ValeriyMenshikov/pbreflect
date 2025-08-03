@@ -1,7 +1,11 @@
 # PBReflect
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11%2B-brightgreen)
+[![PyPI version](https://img.shields.io/pypi/v/pbreflect.svg)](https://pypi.org/project/pbreflect)
+[![Python versions](https://img.shields.io/pypi/pyversions/pbreflect.svg)](https://pypi.python.org/pypi/pbreflect)
+[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/ValeriyMenshikov/pbreflect/python-test.yml?branch=main)](https://github.com/ValeriyMenshikov/pbreflect/actions/workflows/python-test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ValeriyMenshikov/pbreflect/blob/main/LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/pbreflect.svg)](https://pypistats.org/packages/pbreflect)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 PBReflect is a powerful tool for recovering Protocol Buffer (protobuf) definitions from gRPC services using the reflection API. It allows developers to generate `.proto` files from running gRPC servers without having access to the original source code.
 
