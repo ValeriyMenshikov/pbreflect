@@ -34,28 +34,28 @@ class InitFilePatcher:
         """Add __init__.py files to all directories in the output structure."""
         # Get all directories in the output structure
         all_dirs = set()
-        
+
         # Include the output directory itself
         all_dirs.add(self.code_dir)
-        
+
         # First, collect all directories
         for root, dirs, _ in os.walk(self.code_dir):
             root_path = Path(root)
-            
+
             # Add current directory
             all_dirs.add(root_path)
-            
+
             # Add all subdirectories
             for dir_name in dirs:
                 dir_path = root_path / dir_name
                 all_dirs.add(dir_path)
-        
+
         # Add __init__.py to each directory if it doesn't exist
         for directory in all_dirs:
             # Skip the root project directory
             if directory == self.root_dir:
                 continue
-                
+
             init_file = directory / "__init__.py"
             if not init_file.exists():
                 # Create an empty __init__.py file

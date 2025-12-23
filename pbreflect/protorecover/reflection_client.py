@@ -451,4 +451,4 @@ class GrpcReflectionClient:
             Output filename
         """
         filename = proto_file.name.replace(".proto", suffix)
-        return filename
+        return filename.replace("-", "_")

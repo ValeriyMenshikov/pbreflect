@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any, final
 
@@ -43,7 +44,7 @@ class ProtoFileBuilder:
                 prefix.append("public")
             if index in self.descriptor.weak_dependency:
                 prefix.append("weak")
-            imports.append((prefix, dep))
+            imports.append((prefix, self._normalize_dependency_import(dep)))
 
         # Generate the content for messages, enums, and services
         content = self._parse_msgs_and_services(self.descriptor, [""], syntax)
@@ -56,6 +57,26 @@ class ProtoFileBuilder:
         name = self.descriptor.name.replace("..", "").strip("./\\")
 
         return name, rendered
+
+    @staticmethod
+    def _normalize_dependency_import(dep: str) -> str:
+        """Normalize dependency import paths coming from reflection.
+
+        Some servers may expose malformed dependency paths that accidentally
+        concatenate a repository prefix with an absolute import path, e.g.:
+            foo/bar/service-example/gitlab.example.com/x/y.proto
+
+        Protobuf import resolution expects the canonical import path.
+        We apply a conservative heuristic: if the dependency contains multiple
+        domain-like prefixes (host.tld/), keep the substring starting from the
+        last such prefix.
+        """
+        # Match domain-like segments followed by a slash (e.g. gitlab.example.ru/).
+        matches = list(re.finditer(r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/", dep))
+        if len(matches) <= 1:
+            return dep
+
+        return dep[matches[-1].start() :]
 
     def _parse_msgs_and_services(self, desc: descriptor_pb2.FileDescriptorProto, scopes: list[str], syntax: str) -> str:
         """Parse messages, services, and enums from a FileDescriptorProto.
