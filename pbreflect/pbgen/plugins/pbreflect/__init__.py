@@ -16,7 +16,7 @@ class PbReflectPlugin:
 
     def __init__(self, template_dir: Optional[str] = None) -> None:
         """Initialize the plugin.
-        
+
         Args:
             template_dir: Optional path to custom templates directory
         """
@@ -34,7 +34,7 @@ class PbReflectPlugin:
         # Use custom template directory if provided
         if self.template_dir:
             return Path(self.template_dir)
-            
+
         # Otherwise use default templates directory
         current_dir = Path(__file__).parent
         template_dir = current_dir / "templates"
@@ -153,10 +153,10 @@ def main() -> None:
 
     # Parse parameters
     parameters = PbReflectPlugin.parse_parameters(request.parameter)
-    
+
     # Get template directory from parameters if provided
     template_dir = parameters.get("t", None)
-    
+
     # Process request
     plugin_instance = PbReflectPlugin(template_dir=template_dir)
     response = plugin_instance.process_request(request)

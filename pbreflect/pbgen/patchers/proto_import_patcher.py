@@ -22,13 +22,13 @@ class ProtoImportPatcher:
 
     def patch(self) -> None:
         """Apply all patches."""
+        self._ensure_openapiv2_compat_paths()
         self._patch_imports()
         self._patch_file_names()
 
     def _patch_imports(self) -> None:
         """Patch import statements in proto files."""
         self._patch_incorrect_local_imports()
-        self._remove_gitlab_path()
 
     def _patch_file_names(self) -> None:
         """Patch file names that might cause issues."""
@@ -52,17 +52,29 @@ class ProtoImportPatcher:
                                 self._replace_import(imp, new_import, proto_path)
                         parent = parent.parent
 
-    def _remove_gitlab_path(self) -> None:
-        """Remove gitlab path from import statements."""
-        for proto_path in self.proto_dir.rglob("*.proto"):
-            if not proto_path.is_file():
-                continue
+    def _ensure_openapiv2_compat_paths(self) -> None:
+        """Ensure canonical openapiv2 import paths exist.
 
-            imports = self._get_imports(proto_path)
-            for imp in imports:
-                if "gitlab" in imp:
-                    new_import = imp.split("/")[-1]
-                    self._replace_import(imp, new_import, proto_path)
+        Many projects import:
+            import "protoc-gen-openapiv2/options/annotations.proto";
+
+        In this repository the vendored protos may live under
+        "protoc_gen_openapiv2/..." (underscore). To keep upstream-compatible
+        imports, we create a copy under the canonical hyphenated directory
+        when needed.
+        """
+        src_dir = self.proto_dir / "protoc_gen_openapiv2" / "options"
+        dst_dir = self.proto_dir / "protoc-gen-openapiv2" / "options"
+
+        if not src_dir.exists():
+            return
+
+        dst_dir.mkdir(parents=True, exist_ok=True)
+
+        for src in src_dir.glob("*.proto"):
+            dst = dst_dir / src.name
+            if not dst.exists():
+                shutil.copy(src, dst)
 
     def _patch_keywords_in_file_names(self) -> None:
         """Patch file names that use Python keywords."""

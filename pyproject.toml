@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pbreflect"
-version = "1.1.0"
+version = "1.1.1"
 description = "A tool for recovering Protocol Buffer definitions from gRPC services using reflection API and generating client code"
 authors = ["Menshikov Valeriy Sergeevich <valery.menshikov.1989@gmail.com>"]
 readme = "README.md"

@@ -29,7 +29,7 @@ class PbReflectGeneratorStrategy(GeneratorStrategy):
 
         if not self.async_mode:
             plugin_options.append("async=false")
-            
+
         if self.template_dir:
             plugin_options.append(f"t={self.template_dir}")
 
