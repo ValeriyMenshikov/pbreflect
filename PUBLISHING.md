@@ -12,20 +12,20 @@ This document contains instructions for preparing and publishing the pbreflect p
 
 3. Make sure all tests pass:
    ```bash
-   poetry run pytest
+   uv run pytest
    ```
 
 4. Check code style:
    ```bash
-   poetry run ruff check .
-   poetry run mypy .
+   uv run ruff check .
+   uv run mypy .
    ```
 
 ## Building the Package
 
-1. Build the package using Poetry:
+1. Build the package using uv:
    ```bash
-   poetry build
+   uv build
    ```
 
    This will create distribution files in the `dist/` directory.
@@ -34,17 +34,17 @@ This document contains instructions for preparing and publishing the pbreflect p
 
 1. For publishing to TestPyPI (recommended for testing):
    ```bash
-   poetry publish -r testpypi
+   UV_PYPI_TOKEN=$TEST_PYPI_TOKEN uv publish --index testpypi
    ```
 
 2. For publishing to the main PyPI repository:
    ```bash
-   poetry publish
+   UV_PYPI_TOKEN=$PYPI_API_TOKEN uv publish
    ```
 
    Or, if you want to build and publish in one command:
    ```bash
-   poetry publish --build
+   UV_PYPI_TOKEN=$PYPI_API_TOKEN uv publish --build
    ```
 
 ## Creating a Git Tag

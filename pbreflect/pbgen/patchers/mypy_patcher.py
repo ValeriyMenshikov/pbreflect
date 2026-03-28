@@ -46,7 +46,7 @@ class MypyPatcher:
             while i < len(lines):
                 line = lines[i]
                 # Remove @final decorators
-                if line.strip() == "@final":
+                if all(x in line.strip() for x in ["@", "final"]):
                     lines.pop(i)
                     continue
 

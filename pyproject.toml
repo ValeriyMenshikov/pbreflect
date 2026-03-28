@@ -1,12 +1,19 @@
-[tool.poetry]
+[project]
 name = "pbreflect"
-version = "1.1.1"
+version = "1.0.3"
 description = "A tool for recovering Protocol Buffer definitions from gRPC services using reflection API and generating client code"
-authors = ["Menshikov Valeriy Sergeevich <valery.menshikov.1989@gmail.com>"]
+authors = [{ name = "Menshikov Valeriy Sergeevich", email = "vmenshikov@ozon.ru" }]
+requires-python = ">=3.11, <4.0"
 readme = "README.md"
 license = "MIT"
-repository = "https://github.com/ValeriyMenshikov/pbreflect"
-keywords = ["grpc", "protobuf", "reflection", "proto", "protocol-buffers", "code-generation"]
+keywords = [
+    "grpc",
+    "protobuf",
+    "reflection",
+    "proto",
+    "protocol-buffers",
+    "code-generation",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -15,45 +22,59 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Code Generators",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
-packages = [{ include = "pbreflect" }]
+dependencies = [
+    "jinja2>=3.1.6",
+    "grpcio-reflection>=1.71.0",
+    "pydantic>=2.11.3",
+    "grpcio-tools>=1.71.0",
+    "click>=8.1.8",
+    "mypy-protobuf>=5.0.0",
+    "grpcio>=1.71.0",
+    "grpc-stubs>=1.53.0.6",
+    "protobuf>=6.32.0",
+    "types-protobuf>=6.0.0",
+    "pydantic-settings>=2.9.1",
+    "loguru>=0.7.3",
+    "ruff>=0.11.7",
+]
 
-[tool.poetry.scripts]
+[project.optional-dependencies]
+betterproto = [
+    "betterproto==2.0.0b7",
+]
+
+[project.urls]
+Repository = "https://github.com/ValeriyMenshikov/pbreflect"
+
+[project.scripts]
 pbreflect = "pbreflect.main:cli"
 protoc-gen-pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 
-[tool.poetry.plugins.protoc_gen_plugins]
+[project.entry-points.protoc_gen_plugins]
 pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 
-[tool.poetry.dependencies]
-python = ">=3.11, <4.0"
-jinja2 = ">=3.1.6"
-grpcio-reflection = ">=1.71.0"
-pydantic = ">=2.11.3"
-grpcio-tools = ">=1.71.0"
-click = ">=8.1.8"
-mypy-protobuf = ">=3.6.0"
-grpcio = ">=1.71.0"
-grpc-stubs = ">=1.53.0.6"
-protobuf = ">=5.0.0"
-types-protobuf = ">=4.24.0.20240311"
-pydantic-settings = ">=2.9.1"
-loguru = ">=0.7.3"
-ruff = ">=0.11.7"
-betterproto = { version = "v2.0.0-beta7", optional = true }
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0,<2",
+    "pytest>=8.0.0,<9",
+    "black>=24.0.0,<25",
+    "isort>=5.13.0,<6",
+]
 
-[tool.poetry.extras]
-betterproto = ["betterproto"]
+[tool.uv]
+default-groups = "all"
 
-[tool.poetry.group.dev.dependencies]
-mypy = "^1.15.0"
-pytest = "^8.0.0"
-black = "^24.0.0"
-isort = "^5.13.0"
+[tool.uv.build-backend]
+module-name = ["pbreflect"]
+module-root = ""
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.9.28,<0.10.0"]
+build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 120
