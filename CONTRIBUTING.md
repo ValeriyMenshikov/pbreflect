@@ -10,19 +10,20 @@ Thank you for your interest in the pbreflect project! This document contains inf
    cd pbreflect
    ```
 
-2. Install Poetry (if not already installed):
+2. Install uv (if not already installed):
    ```bash
-   curl -sSL https://install.python-poetry.org | python3 -
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
 3. Install project dependencies:
    ```bash
-   poetry install
+   uv sync
    ```
 
 4. Activate the virtual environment:
    ```bash
-   poetry shell
+   uv venv
+   source .venv/bin/activate
    ```
 
 ## Code Style
@@ -38,16 +39,16 @@ Before submitting changes, make sure the code meets the standards:
 
 ```bash
 # Check code style
-poetry run ruff check .
+uv run ruff check .
 
 # Format code
-poetry run black .
+uv run black .
 
 # Sort imports
-poetry run isort .
+uv run isort .
 
 # Type checking
-poetry run mypy .
+uv run mypy .
 ```
 
 ## Testing
@@ -55,7 +56,7 @@ poetry run mypy .
 Run tests to ensure your changes don't break existing functionality:
 
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 ## Contribution Process

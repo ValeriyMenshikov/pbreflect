@@ -1,5 +1,5 @@
-# This workflow will upload a Python Package using Poetry when a release is created
-# For more information see: https://python-poetry.org/docs/cli/#publish
+# This workflow will upload a Python Package using uv when a release is created
+# For more information see: https://docs.astral.sh/uv/guides/publish/
 
 name: Upload Python Package
 
@@ -17,27 +17,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
       with:
         python-version: '3.11'
-    
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: 1.7.1
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-    
-    - name: Install dependencies
-      run: |
-        poetry install --no-interaction --no-root
-    
+
     - name: Build package
-      run: |
-        poetry build
-    
+      run: uv build
+
     - name: Publish package
-      run: |
-        poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-        poetry publish --no-interaction
+      env:
+        UV_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+      run: uv publish
