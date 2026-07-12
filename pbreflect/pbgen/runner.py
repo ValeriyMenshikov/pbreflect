@@ -1,17 +1,12 @@
-"""Runner for code generation.
-
-This module provides the main entry point for generating client code from proto files.
-It orchestrates the process of finding proto files, patching them if needed,
-generating code using the appropriate generator, and applying post-generation patches.
-"""
+"""Code generation pipeline — orchestrates proto patching, client generation, and test stubs."""
 
 import os
 import shutil
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
 
-from pbreflect.pbgen.generators.base import BaseGenerator
-from pbreflect.pbgen.generators.factory import GeneratorFactoryImpl
+from pbreflect.pbgen.generators.base import ClientGenerator
+from pbreflect.pbgen.generators.factory import GeneratorFactory, GeneratorType
 from pbreflect.pbgen.patchers.directory_structure_patcher import DirectoryStructurePatcher
 from pbreflect.pbgen.patchers.import_patcher import ImportPatcher
 from pbreflect.pbgen.patchers.init_file_patcher import InitFilePatcher
@@ -19,78 +14,76 @@ from pbreflect.pbgen.patchers.mypy_patcher import MypyPatcher
 from pbreflect.pbgen.patchers.patcher_protocol import CodePatcher
 from pbreflect.pbgen.patchers.pb_reflect_patcher import PbReflectPatcher
 from pbreflect.pbgen.patchers.proto_import_patcher import ProtoImportPatcher
-from pbreflect.pbgen.utils.command import CommandExecutorImpl
-from pbreflect.pbgen.utils.file_finder import ProtoFileFinderImpl
+from pbreflect.pbgen.utils.command import CommandExecutor
+from pbreflect.pbgen.utils.file_finder import ProtoFileFinder
 
 
-def run(
-    proto_dir: str,
-    output_dir: str,
-    gen_type: Literal["default", "mypy", "betterproto", "pbreflect"],
-    refresh: bool = False,
-    root_path: Path | None = None,
-    async_mode: bool = True,
-    template_dir: str | None = None,
-) -> None:
-    """Run code generation for proto files.
+@dataclass
+class GenerationOptions:
+    """All tuneable knobs for a single generation run."""
 
-    This function orchestrates the entire code generation process:
-    1. Optionally cleans the output directory
-    2. Applies pre-generation patches to proto files
-    3. Finds all proto files in the specified directory
-    4. Generates code using the selected generator type
-    5. Applies post-generation patches to the generated code
+    gen_type: GeneratorType = GeneratorType.PBREFLECT
+    refresh: bool = False
+    async_mode: bool = False
+    template_dir: str | None = None
+    gen_tests: bool = False
+    tests_dir: str = "tests"
+    tests_client_module: str = "clients"
+    root_path: Path = field(default_factory=Path.cwd)
 
-    Args:
-        proto_dir: Directory containing proto files to process
-        output_dir: Directory where generated code will be placed
-        gen_type: Type of generator to use:
-            - "default": Standard protoc Python output
-            - "mypy": Standard output with mypy type annotations
-            - "betterproto": Uses betterproto generator
-            - "pbreflect": Custom generator with enhanced gRPC client support
-        refresh: If True, clears the output directory before generation
-        root_path: Root project directory, defaults to current working directory
-        async_mode: Whether to generate async client code (True) or sync client code (False)
-        template_dir: Custom directory with templates (only for pbreflect generator)
-    """
-    if refresh and os.path.exists(output_dir):
-        shutil.rmtree(output_dir)
 
-    os.makedirs(output_dir, exist_ok=True)
+class GenerationPipeline:
+    """Orchestrates the full client-code generation pipeline."""
 
-    root_path = root_path or Path.cwd()
+    def __init__(self, proto_dir: str, output_dir: str, options: GenerationOptions | None = None) -> None:
+        self._proto_dir = proto_dir
+        self._output_dir = output_dir
+        self._opts = options or GenerationOptions()
 
-    proto_patchers: list[CodePatcher] = [
-        ProtoImportPatcher(proto_dir),
-    ]
+    def run(self) -> None:
+        self._prepare_output_dir()
+        self._patch_protos()
+        self._generate_clients()
+        self._patch_clients()
+        if self._opts.gen_tests:
+            self._generate_tests()
 
-    for patcher in proto_patchers:
-        patcher.patch()
+    def _prepare_output_dir(self) -> None:
+        if self._opts.refresh and os.path.exists(self._output_dir):
+            shutil.rmtree(self._output_dir)
+        os.makedirs(self._output_dir, exist_ok=True)
 
-    proto_finder = ProtoFileFinderImpl(proto_dir)
+    def _patch_protos(self) -> None:
+        ProtoImportPatcher(self._proto_dir).patch()
 
-    command_executor = CommandExecutorImpl()
-    generator_factory = GeneratorFactoryImpl()
+    def _generate_clients(self) -> None:
+        strategy = GeneratorFactory().create_generator(
+            self._opts.gen_type,
+            async_mode=self._opts.async_mode,
+            template_dir=self._opts.template_dir,
+        )
+        ClientGenerator(ProtoFileFinder(self._proto_dir), CommandExecutor()).generate(self._output_dir, strategy)
 
-    generator_strategy = generator_factory.create_generator(
-        gen_type,
-        async_mode=async_mode,
-        template_dir=template_dir,
-    )
+    def _patch_clients(self) -> None:
+        for patcher in self._client_patchers():
+            patcher.patch()
 
-    generator = BaseGenerator(proto_finder, command_executor, generator_factory)
-    generator.generate(output_dir, generator_strategy)
+    def _client_patchers(self) -> list[CodePatcher]:
+        return [
+            DirectoryStructurePatcher(self._output_dir),
+            ImportPatcher(self._output_dir, self._opts.root_path),
+            MypyPatcher(self._output_dir),
+            PbReflectPatcher(self._output_dir),
+            InitFilePatcher(self._output_dir),
+        ]
 
-    # Patch generated code
-    patchers: list[CodePatcher] = [
-        DirectoryStructurePatcher(output_dir),
-        ImportPatcher(output_dir, root_path),
-        MypyPatcher(output_dir),
-        PbReflectPatcher(output_dir),
-        InitFilePatcher(output_dir),
-    ]
+    def _generate_tests(self) -> None:
+        from pbreflect.pbgen.plugins.tests.runner import run_test_generation
 
-    # Apply all patchers
-    for patcher in patchers:
-        patcher.patch()
+        run_test_generation(
+            proto_dir=self._proto_dir,
+            tests_output_dir=self._opts.tests_dir,
+            client_module=self._opts.tests_client_module,
+            async_mode=self._opts.async_mode,
+            template_dir=self._opts.template_dir,
+        )
