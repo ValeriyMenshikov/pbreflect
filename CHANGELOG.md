@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-07-12
+
+### Added
+- Test stub generation: `--gen-tests` flag automatically generates pytest test stubs and conftest fixtures for all gRPC services
+- `--tests-dir` option to control where test stubs are written (default: `tests`)
+- `--tests-template-dir` option for custom test stub templates, separate from client templates
+- `--tests-client-module` option to specify the Python module path for generated clients used in test imports
+- `PbReflectTestsPlugin` protoc plugin for generating pytest test stubs from proto descriptors
+- `PbReflectTestsGeneratorStrategy` for invoking the tests plugin via protoc
+- `run_test_generation()` standalone runner that collects descriptors via `grpc_tools.protoc` and invokes the tests plugin directly
+- `TemplateRenderer` class wrapping Jinja2 environment with custom directory and extra filter support
+- `parse_plugin_parameters()` utility for parsing protoc plugin parameter strings
+- `GeneratorType` enum with `from_str()` classmethod, replacing stringly-typed generator selection
+- Comprehensive unit test suite (193 tests, 86% coverage) mirroring source module structure under `tests/pbreflect/`
+- `pytest-cov` dev dependency and coverage configuration in `pyproject.toml`
+- Test templates for conftest, service-level fixtures, and per-method test stubs
+
+### Changed
+- Migrated build system from Poetry to uv (`uv_build` backend)
+- Moved all tool configuration (mypy, ruff, coverage) into `pyproject.toml`, removed `mypy.ini`
+- `GeneratorFactory.create_generator` now accepts `GeneratorType` enum instead of raw string
+- `GenerationOptions.gen_type` field changed from `Literal[...]` to `GeneratorType`
+- `GenerationOptions` gained `tests_template_dir` field for independent test template configuration
+- Simplified logging: removed hard `colorama` dependency, added conditional `_ColorFormatter` with graceful fallback
+- Refactored CLI to pass `tests_template_dir` through `generate` and `reflect` commands
+- `main()` entry points for `pbreflect_plugin` and `tests_plugin` extracted into dedicated modules
+
+### Removed
+- `DynamicGeneratorStrategy` fallback for unknown generator types (CLI choices are now fixed)
+- `colorama` as a mandatory dependency
+- Standalone `mypy.ini` configuration file
+
 ## [1.1.2] - 2026-03-28
 
 ### Fixed
