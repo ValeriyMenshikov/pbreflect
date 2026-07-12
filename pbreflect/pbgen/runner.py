@@ -28,6 +28,7 @@ class GenerationOptions:
     template_dir: str | None = None
     gen_tests: bool = False
     tests_dir: str = "tests"
+    tests_template_dir: str | None = None
     tests_client_module: str = "clients"
     root_path: Path = field(default_factory=Path.cwd)
 
@@ -85,5 +86,5 @@ class GenerationPipeline:
             tests_output_dir=self._opts.tests_dir,
             client_module=self._opts.tests_client_module,
             async_mode=self._opts.async_mode,
-            template_dir=self._opts.template_dir,
+            template_dir=self._opts.tests_template_dir,
         )

@@ -40,6 +40,7 @@ _GEN_OPTIONS = [
     click.option("--template-dir", "template_dir", help="Custom templates directory (pbreflect only)"),
     click.option("--gen-tests", "gen_tests", is_flag=True, help="Also generate pytest test stubs"),
     click.option("--tests-dir", "tests_dir", default="tests", help="Where to write test stubs"),
+    click.option("--tests-template-dir", "tests_template_dir", help="Custom templates directory for test stubs"),
     click.option(
         "--tests-client-module", "tests_client_module",
         default="clients",
@@ -125,6 +126,7 @@ def gen(
     template_dir: str | None = None,
     gen_tests: bool = False,
     tests_dir: str = "tests",
+    tests_template_dir: str | None = None,
     tests_client_module: str = "clients",
 ) -> None:
     """Generate client code from local proto files."""
@@ -138,6 +140,7 @@ def gen(
             template_dir=template_dir,
             gen_tests=gen_tests,
             tests_dir=tests_dir,
+            tests_template_dir=tests_template_dir,
             tests_client_module=tests_client_module,
         ),
     ).run()
@@ -161,6 +164,7 @@ def generate_from_server(
     refresh: bool = False,
     gen_tests: bool = False,
     tests_dir: str = "tests",
+    tests_template_dir: str | None = None,
     tests_client_module: str = "clients",
 ) -> None:
     """Generate client code directly from a running gRPC server."""
@@ -201,6 +205,7 @@ def generate_from_server(
                     template_dir=template_dir,
                     gen_tests=gen_tests,
                     tests_dir=tests_dir,
+                    tests_template_dir=tests_template_dir,
                     tests_client_module=tests_client_module,
                 ),
             ).run()
