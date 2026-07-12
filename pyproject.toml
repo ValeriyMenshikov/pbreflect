@@ -57,6 +57,7 @@ pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 dev = [
     "mypy>=1.15.0,<2",
     "pytest>=8.0.0,<9",
+    "pytest-cov>=6.0.0,<7",
     "grpc-stubs>=1.53.0.6",
     "types-protobuf>=6.0.0",
 ]
@@ -124,3 +125,13 @@ strict_optional = true
 [[tool.mypy.overrides]]
 module = ["example_clients.*", "clients.*"]
 ignore_errors = true
+
+[tool.coverage.run]
+source = ["pbreflect"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
