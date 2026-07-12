@@ -2,16 +2,14 @@
 
 
 class GenerationFailedError(Exception):
-    """Class for exception while generating stubs."""
+    """Raised when protoc fails to generate stubs."""
 
-    def __init__(self, message: str | None = None) -> None:
-        self.message = message or "Errors while generating stubs! Check logs."
-        super().__init__(self.message)
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
 
 
 class NoProtoFilesError(Exception):
-    """Class for exception if input directory without proto files."""
+    """Raised when no .proto files are found in the specified directory."""
 
-    def __init__(self, include_dir: str) -> None:
-        self.message = f"Proto files not found by path: {include_dir}!"
-        super().__init__(self.message)
+    def __init__(self, proto_dir: str) -> None:
+        super().__init__(f"No .proto files found in: {proto_dir}")

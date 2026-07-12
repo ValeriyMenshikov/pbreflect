@@ -16,7 +16,6 @@ class ProtoFileBuilder:
 
     def __init__(self) -> None:
         """Initialize the ProtoFileBuilder."""
-        self.descriptor: descriptor_pb2.FileDescriptorProto | None = None
         self.env = Environment(  # noqa: S701
             loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
             trim_blocks=True,
@@ -32,30 +31,24 @@ class ProtoFileBuilder:
         Returns:
             A tuple containing (file_name, file_content)
         """
-        self.descriptor = descriptor
-        syntax = self.descriptor.syntax or "proto2"
-        package = self.descriptor.package
+        syntax = descriptor.syntax or "proto2"
+        package = descriptor.package
         imports: list[tuple[list[str], str]] = []
 
-        # Process imports and their qualifiers (public/weak)
-        for index, dep in enumerate(self.descriptor.dependency):
+        for index, dep in enumerate(descriptor.dependency):
             prefix = []
-            if index in self.descriptor.public_dependency:
+            if index in descriptor.public_dependency:
                 prefix.append("public")
-            if index in self.descriptor.weak_dependency:
+            if index in descriptor.weak_dependency:
                 prefix.append("weak")
             imports.append((prefix, self._normalize_dependency_import(dep)))
 
-        # Generate the content for messages, enums, and services
-        content = self._parse_msgs_and_services(self.descriptor, [""], syntax)
+        content = self._parse_msgs_and_services(descriptor, [""], syntax, package)
 
-        # Render the complete proto file using the template
         template = self.env.get_template("file.proto.j2")
         rendered = template.render(syntax=syntax, package=package, imports=imports, content=content.strip())
 
-        # Normalize the file name
-        name = self.descriptor.name.replace("..", "").strip("./\\")
-
+        name = descriptor.name.replace("..", "").strip("./\\")
         return name, rendered
 
     @staticmethod
@@ -78,35 +71,18 @@ class ProtoFileBuilder:
 
         return dep[matches[-1].start() :]
 
-    def _parse_msgs_and_services(self, desc: descriptor_pb2.FileDescriptorProto, scopes: list[str], syntax: str) -> str:
-        """Parse messages, services, and enums from a FileDescriptorProto.
-
-        Args:
-            desc: The FileDescriptorProto to parse
-            scopes: List of scope names for nested messages
-            syntax: Proto syntax version (proto2 or proto3)
-
-        Returns:
-            String containing the rendered proto content
-        """
+    def _parse_msgs_and_services(
+        self, desc: descriptor_pb2.FileDescriptorProto, scopes: list[str], syntax: str, package: str
+    ) -> str:
         out = ""
-
-        # Process services
         for service in getattr(desc, "service", []):
-            out += self._render_service(service)
-
-        # Process nested types
+            out += self._render_service(service, package)
         for nested_msg in getattr(desc, "nested_type", []):
-            out += self._render_message(nested_msg, scopes, syntax)
-
-        # Process top-level messages
+            out += self._render_message(nested_msg, scopes, syntax, package)
         for message in getattr(desc, "message_type", []):
-            out += self._render_message(message, scopes, syntax)
-
-        # Process enums
+            out += self._render_message(message, scopes, syntax, package)
         for enum in desc.enum_type:
             out += self._render_enum(enum)
-
         return out
 
     def _render_enum(self, enum: descriptor_pb2.EnumDescriptorProto) -> str:
@@ -122,110 +98,74 @@ class ProtoFileBuilder:
         template = self.env.get_template("enum.proto.j2")
         return template.render(name=enum.name, options=[], values=values)
 
-    def _render_service(self, service: descriptor_pb2.ServiceDescriptorProto) -> str:
-        """Render a service definition.
+    def _render_service(self, service: descriptor_pb2.ServiceDescriptorProto, package: str) -> str:
+        methods: list[dict[str, Any]] = [
+            {
+                "name": m.name,
+                "input_type": self._format_type(m.input_type, package),
+                "output_type": self._format_type(m.output_type, package),
+                "client_streaming": m.client_streaming,
+                "server_streaming": m.server_streaming,
+            }
+            for m in service.method
+        ]
+        return self.env.get_template("service.proto.j2").render(name=service.name, methods=methods)
 
-        Args:
-            service: The ServiceDescriptorProto to render
-
-        Returns:
-            String containing the rendered service definition
-        """
-        methods: list[dict[str, Any]] = []
-        for method in service.method:
-            methods.append(
-                {
-                    "name": method.name,
-                    "input_type": self._format_type(method.input_type),
-                    "output_type": self._format_type(method.output_type),
-                    "client_streaming": method.client_streaming,
-                    "server_streaming": method.server_streaming,
-                }
-            )
-        template = self.env.get_template("service.proto.j2")
-        return template.render(name=service.name, methods=methods)
-
-    def _format_type(self, type_name: str) -> str:
-        """Format a type name by removing package prefix if it's in the same package.
-
-        Args:
-            type_name: The fully-qualified type name
-
-        Returns:
-            Formatted type name
-        """
+    @staticmethod
+    def _format_type(type_name: str, package: str) -> str:
         type_path = type_name.strip(".")
-        if self.descriptor and self.descriptor.package and type_path.startswith(self.descriptor.package):
-            return type_path[len(self.descriptor.package) + 1 :]
+        if package and type_path.startswith(package):
+            return type_path[len(package) + 1 :]
         return type_path
 
-    def _render_message(self, message: descriptor_pb2.DescriptorProto, scopes: list[str], syntax: str) -> str:
-        """Render a message definition.
-
-        Args:
-            message: The DescriptorProto to render
-            scopes: List of scope names for nested messages
-            syntax: Proto syntax version (proto2 or proto3)
-
-        Returns:
-            String containing the rendered message definition
-        """
-        fields: list[dict[str, Any]] = []
-        oneofs: dict[str, list[dict[str, Any]]] = {}
-        nested_msgs: list[str] = []
-        enums: list[str] = []
-
-        # Skip map entry messages as they're handled specially
+    def _render_message(
+        self, message: descriptor_pb2.DescriptorProto, scopes: list[str], syntax: str, package: str
+    ) -> str:
         if message.options.map_entry:
             return ""
 
-        # Identify map entry messages for special handling
         map_entries = {nested.name: nested for nested in message.nested_type if nested.options.map_entry}
+        fields: list[dict[str, Any]] = []
+        oneofs: dict[str, list[dict[str, Any]]] = {}
 
-        # Process each field
-        for field in message.field:
-            # Special handling for map fields
+        for f in message.field:
             if (
-                field.type == descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE
-                and field.type_name.split(".")[-1] in map_entries
+                f.type == descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE
+                and f.type_name.split(".")[-1] in map_entries
             ):
-                entry = map_entries[field.type_name.split(".")[-1]]
-                key_field = next(f for f in entry.field if f.name == "key")
-                value_field = next(f for f in entry.field if f.name == "value")
-
+                entry = map_entries[f.type_name.split(".")[-1]]
+                key_field = next(kf for kf in entry.field if kf.name == "key")
+                value_field = next(vf for vf in entry.field if vf.name == "value")
                 field_info = {
                     "label": "",
-                    "type": f"map<{self._resolve_type(key_field)}, {self._resolve_type(value_field)}>",
-                    "name": field.name,
-                    "number": field.number,
+                    "type": (
+                        f"map<{self._resolve_type(key_field, package)}, "
+                        f"{self._resolve_type(value_field, package)}>"
+                    ),
+                    "name": f.name,
+                    "number": f.number,
                 }
             else:
                 field_info = {
-                    "label": "" if field.HasField("oneof_index") else self._labels[field.label],
-                    "type": self._resolve_type(field),
-                    "name": field.name,
-                    "number": field.number,
+                    "label": "" if f.HasField("oneof_index") else self._labels[f.label],
+                    "type": self._resolve_type(f, package),
+                    "name": f.name,
+                    "number": f.number,
                 }
 
-            # Handle oneof fields
-            if field.HasField("oneof_index"):
-                oneof_name = message.oneof_decl[field.oneof_index].name
-                oneofs.setdefault(oneof_name, []).append(field_info)
+            if f.HasField("oneof_index"):
+                oneofs.setdefault(message.oneof_decl[f.oneof_index].name, []).append(field_info)
             else:
                 fields.append(field_info)
 
-        # Process nested enums
-        for nested_enum in message.enum_type:
-            enums.append(self._render_enum(nested_enum))
+        enums = [self._render_enum(e) for e in message.enum_type]
+        nested_msgs = [
+            self._render_message(n, scopes, syntax, package)
+            for n in message.nested_type
+            if not n.options.map_entry
+        ]
 
-        # Process nested messages (excluding map entries)
-        for nested in message.nested_type:
-            if not nested.options.map_entry:
-                nested_msgs.append(self._render_message(nested, scopes, syntax))
-
-        # Render the message using the template
-        template = self.env.get_template("message.proto.j2")
-        return template.render(
+        return self.env.get_template("message.proto.j2").render(
             name=message.name,
             fields=fields,
             oneofs=oneofs,
@@ -234,24 +174,12 @@ class ProtoFileBuilder:
             options=[],
         )
 
-    def _resolve_type(self, field: descriptor_pb2.FieldDescriptorProto) -> str:
-        """Resolve the type name for a field.
-
-        Args:
-            field: The FieldDescriptorProto to resolve the type for
-
-        Returns:
-            The resolved type name
-        """
+    def _resolve_type(self, field: descriptor_pb2.FieldDescriptorProto, package: str) -> str:
         if field.type_name:
-            # It's a named type (message or enum)
             type_path = field.type_name.strip(".")
-            if self.descriptor and self.descriptor.package and type_path.startswith(self.descriptor.package):
-                # Remove package prefix for types in the same package
-                return type_path[len(self.descriptor.package) + 1 :]
-            else:
-                return type_path
-        # It's a primitive type
+            if package and type_path.startswith(package):
+                return type_path[len(package) + 1 :]
+            return type_path
         return self._types[field.type]
 
     @property

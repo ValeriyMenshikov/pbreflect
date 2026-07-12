@@ -18,6 +18,12 @@ from builtins import (
 from collections.abc import (
     Iterable,
 )
+from typing import (
+    Literal,
+    NewType,
+    overload,
+)
+
 from google.protobuf.descriptor import (
     Descriptor,
     EnumDescriptor,
@@ -40,12 +46,6 @@ from google.protobuf.wrappers_pb2 import (
     BoolValue,
     Int32Value,
     StringValue,
-)
-from typing import (
-    Literal,
-    NewType,
-    final,
-    overload,
 )
 
 DESCRIPTOR: FileDescriptor

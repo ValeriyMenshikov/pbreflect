@@ -1,6 +1,6 @@
 [project]
 name = "pbreflect"
-version = "1.1.2"
+version = "2.0.0"
 description = "A tool for recovering Protocol Buffer definitions from gRPC services using reflection API and generating client code"
 authors = [{ name = "Menshikov Valeriy Sergeevich", email = "vmenshikov@ozon.ru" }]
 requires-python = ">=3.11, <4.0"
@@ -29,17 +29,12 @@ classifiers = [
 dependencies = [
     "jinja2>=3.1.6",
     "grpcio-reflection>=1.71.0",
-    "pydantic>=2.11.3",
     "grpcio-tools>=1.71.0",
     "click>=8.1.8",
-    "mypy-protobuf>=5.0.0",
     "grpcio>=1.71.0",
-    "grpc-stubs>=1.53.0.6",
     "protobuf>=6.32.0",
-    "types-protobuf>=6.0.0",
-    "pydantic-settings>=2.9.1",
-    "loguru>=0.7.3",
     "ruff>=0.11.7",
+    "mypy-protobuf>=5.0.0",
 ]
 
 [project.optional-dependencies]
@@ -53,6 +48,7 @@ Repository = "https://github.com/ValeriyMenshikov/pbreflect"
 [project.scripts]
 pbreflect = "pbreflect.main:cli"
 protoc-gen-pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
+protoc-gen-pbreflect_tests = "pbreflect.pbgen.plugins.tests_plugin:main"
 
 [project.entry-points.protoc_gen_plugins]
 pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
@@ -61,8 +57,9 @@ pbreflect = "pbreflect.pbgen.plugins.pbreflect_plugin:main"
 dev = [
     "mypy>=1.15.0,<2",
     "pytest>=8.0.0,<9",
-    "black>=24.0.0,<25",
-    "isort>=5.13.0,<6",
+    "pytest-cov>=6.0.0,<7",
+    "grpc-stubs>=1.53.0.6",
+    "types-protobuf>=6.0.0",
 ]
 
 [tool.uv]
@@ -79,6 +76,7 @@ build-backend = "uv_build"
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+exclude = ["example_clients", "clients"]
 
 [tool.ruff.lint]
 select = ["N", "B", "A", "E", "W", "F", "ASYNC", "S", "D", "I"]
@@ -112,12 +110,9 @@ builtins-ignorelist = ["id"]
 [tool.ruff.lint.isort]
 known-first-party = ["pbreflect"]
 
-[tool.black]
-line-length = 120
-target-version = ["py311"]
-
 [tool.mypy]
 python_version = "3.11"
+ignore_missing_imports = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -126,3 +121,17 @@ check_untyped_defs = true
 disallow_untyped_decorators = true
 no_implicit_optional = true
 strict_optional = true
+
+[[tool.mypy.overrides]]
+module = ["example_clients.*", "clients.*"]
+ignore_errors = true
+
+[tool.coverage.run]
+source = ["pbreflect"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

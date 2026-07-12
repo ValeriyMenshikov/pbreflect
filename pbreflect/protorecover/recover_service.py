@@ -170,8 +170,6 @@ class RecoverService:
             channel = grpc.secure_channel(target, credentials)
             grpc.channel_ready_future(channel).result(timeout=timeout)
             return channel
-        except FileNotFoundError as e:
-            raise e
         except Exception as e:
             raise RecoverServiceConnectionError(f"Secure channel creation failed: {e}") from e
 
